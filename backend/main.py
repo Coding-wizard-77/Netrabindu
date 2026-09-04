@@ -78,8 +78,9 @@ app.include_router(audit.router)
 app.include_router(integrations.router)
 
 @app.websocket("/ws/events")
-async def websocket_events(websocket: WebSocket, token: Optional[str] = Query(None)):
+async def websocket_events(websocket: WebSocket):
     """Real-time live event & alert stream for web console."""
+    token = websocket.query_params.get("token")
     await alert_ws_manager.connect(websocket)
     try:
         while True:
@@ -92,8 +93,9 @@ async def websocket_events(websocket: WebSocket, token: Optional[str] = Query(No
         alert_ws_manager.disconnect(websocket)
 
 @app.websocket("/ws/alerts")
-async def websocket_alerts(websocket: WebSocket, token: Optional[str] = Query(None)):
+async def websocket_alerts(websocket: WebSocket):
     """Real-time live alert stream for operator command center."""
+    token = websocket.query_params.get("token")
     await alert_ws_manager.connect(websocket)
     try:
         while True:
