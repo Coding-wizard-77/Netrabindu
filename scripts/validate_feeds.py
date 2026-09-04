@@ -4,9 +4,14 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from apps.api.database import get_db_context
-from services.camera_registry.models import Camera
-from services.ingestion.validator import FeedValidator
+try:
+    from backend.database import get_db_context
+    from backend.services.camera_registry.models import Camera
+    from backend.services.ingestion.validator import FeedValidator
+except ImportError:
+    from database import get_db_context
+    from services.camera_registry.models import Camera
+    from services.ingestion.validator import FeedValidator
 
 async def validate_all_feeds():
     print("[*] Starting validation of all registered camera sources...")

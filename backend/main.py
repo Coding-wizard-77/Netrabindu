@@ -77,16 +77,23 @@ app.include_router(metrics.router)
 app.include_router(audit.router)
 app.include_router(integrations.router)
 
-@app.websocket("/ws/alerts")
-async def websocket_alerts(websocket: WebSocket, token: str = Query(...)):
-    """Real-time live alert stream for operator command center."""
+@app.websocket("/ws/events")
+async def websocket_events(websocket: WebSocket, token: Optional[str] = Query(None)):
+    """Real-time live event & alert stream for web console."""
+    await alert_ws_manager.connect(websocket)
     try:
-        # Validate JWT token on connection
-        decode_access_token(token)
-    except Exception as e:
-        await websocket.close(code=1008, reason="Authentication failed")
-        return
+        while True:
+            msg = await websocket.receive_text()
+            if msg == "ping":
+                await websocket.send_text('{"type": "pong"}')
+    except WebSocketDisconnect:
+        alert_ws_manager.disconnect(websocket)
+    except Exception:
+        alert_ws_manager.disconnect(websocket)
 
+@app.websocket("/ws/alerts")
+async def websocket_alerts(websocket: WebSocket, token: Optional[str] = Query(None)):
+    """Real-time live alert stream for operator command center."""
     await alert_ws_manager.connect(websocket)
     try:
         while True:

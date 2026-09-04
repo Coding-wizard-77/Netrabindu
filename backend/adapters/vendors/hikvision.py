@@ -1,9 +1,14 @@
 import asyncio
 from datetime import datetime
 from typing import List, Dict, Any, Optional, AsyncIterator
-from adapters.base import (
-    VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
-)
+try:
+    from backend.adapters.base import (
+        VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
+    )
+except ImportError:
+    from adapters.base import (
+        VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
+    )
 
 class HikvisionISAPIAdapter:
     """Hikvision ISAPI protocol adapter."""

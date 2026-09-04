@@ -5,17 +5,32 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from apps.api.database import get_db_context, init_db
-from apps.api.dependencies import create_access_token
-from services.camera_registry.models import Camera, User, Department, WatchlistEntity, Alert, AuditLog
-from services.camera_registry.schemas import CameraCreate
-from services.camera_registry.service import camera_registry_service
-from services.ingestion.stream_manager import stream_manager
-from services.events.persistence import event_persistence
-from services.watchlist.normalizer import normalize_plate
-from services.route_engine.reconstructor import route_engine
-from services.health_monitor.monitor import health_monitor
-from services.audit.logger import audit_service
+try:
+    from backend.database import get_db_context, init_db
+    from backend.dependencies import create_access_token
+    from backend.services.camera_registry.models import Camera, User, Department, WatchlistEntity, Alert, AuditLog
+    from backend.services.camera_registry.schemas import CameraCreate
+    from backend.services.camera_registry.service import camera_registry_service
+    from backend.services.ingestion.stream_manager import stream_manager
+    from backend.services.events.persistence import event_persistence
+    from backend.services.watchlist.normalizer import normalize_plate
+    from backend.services.route_engine.reconstructor import route_engine
+    from backend.services.health_monitor.monitor import health_monitor
+    from backend.services.audit.logger import audit_service
+    from backend.services.alerts.service import alert_service
+except ImportError:
+    from database import get_db_context, init_db
+    from dependencies import create_access_token
+    from services.camera_registry.models import Camera, User, Department, WatchlistEntity, Alert, AuditLog
+    from services.camera_registry.schemas import CameraCreate
+    from services.camera_registry.service import camera_registry_service
+    from services.ingestion.stream_manager import stream_manager
+    from services.events.persistence import event_persistence
+    from services.watchlist.normalizer import normalize_plate
+    from services.route_engine.reconstructor import route_engine
+    from services.health_monitor.monitor import health_monitor
+    from services.audit.logger import audit_service
+    from services.alerts.service import alert_service
 
 async def run_smoke_test():
     print("==========================================================")
@@ -135,7 +150,6 @@ async def run_smoke_test():
 
         # Step 8: Alert State Transition (ACKNOWLEDGE)
         print("[8/12] Testing Alert Lifecycle Transition (NEW -> ACKNOWLEDGED)...")
-        from services.alerts.service import alert_service
         ack_alert = await alert_service.transition_state(
             alert_id=alert.id,
             new_state="ACKNOWLEDGED",
