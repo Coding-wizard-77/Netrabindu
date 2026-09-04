@@ -87,11 +87,11 @@ services:
     volumes:
       - ./infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro
 
-  api:
+  backend:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
-    container_name: netrabindu-api
+    container_name: netrabindu-backend
     restart: unless-stopped
     environment:
       APP_ENV: production
@@ -118,6 +118,31 @@ services:
       timeout: 5s
       retries: 5
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: netrabindu-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  ai_engine:
+    build:
+      context: .
+      dockerfile: ai_models/Dockerfile
+    container_name: netrabindu-ai-engine
+    restart: unless-stopped
+    environment:
+      BACKEND_API_URL: http://backend:8000/api
+      KAFKA_BOOTSTRAP_SERVERS: redpanda:9092
+      EDGE_NODE_ID: edge-sentinel-sg-01
+      EDGE_REGION: "S.G. Highway Command, Ahmedabad"
+    depends_on:
+      - backend
+
   nginx:
     image: nginx:alpine
     container_name: netrabindu-nginx
@@ -127,7 +152,8 @@ services:
     volumes:
       - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - api
+      - backend
+      - frontend
 
   prometheus:
     image: prom/prometheus:latest
