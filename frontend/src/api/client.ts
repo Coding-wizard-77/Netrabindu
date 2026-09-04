@@ -24,11 +24,14 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Clear token and broadcast logout if unauthorized
-      localStorage.removeItem('netrabindu_access_token');
-      localStorage.removeItem('netrabindu_user');
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/setup') {
-        window.location.href = '/login';
+      const url = error.config?.url || '';
+      // Do not clear session or redirect if the request was an explicit login attempt
+      if (!url.includes('/auth/login')) {
+        localStorage.removeItem('netrabindu_access_token');
+        localStorage.removeItem('netrabindu_user');
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/setup') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

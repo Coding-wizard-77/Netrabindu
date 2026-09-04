@@ -23,21 +23,8 @@ export const LoginView: React.FC = () => {
       navigate('/');
     } catch (err: any) {
       console.warn('Login failure:', err);
-      // Fallback local session for offline development mode if backend is not yet started
-      setSession({
-        access_token: 'mock_token_super_admin',
-        refresh_token: 'mock_refresh',
-        token_type: 'Bearer',
-        user: {
-          id: 'usr_admin',
-          username: username || 'admin',
-          department_id: 'dept_traffic',
-          department_name: 'Gujarat Police HQ',
-          role: 'SUPER_ADMIN',
-          created_at: new Date().toISOString(),
-        },
-      });
-      navigate('/');
+      const detail = err.response?.data?.detail || err.message || 'Authentication failed. Please verify credentials.';
+      setError(typeof detail === 'string' ? detail : 'Invalid username or password.');
     } finally {
       setLoading(false);
     }
@@ -99,6 +86,10 @@ export const LoginView: React.FC = () => {
           <Button type="submit" variant="primary" className="w-full" loading={loading}>
             Authenticate &amp; Enter Command Center
           </Button>
+
+          <div className="bg-slate-900/60 border border-slate-800 rounded-lg p-2.5 text-center text-[11px] text-slate-400">
+            <span className="text-cyan-400 font-semibold">Default Operator:</span> <code className="text-white">admin</code> / <code className="text-white">GujaratPolice@2026</code>
+          </div>
         </form>
 
         <div className="text-center text-[10px] font-mono text-slate-500 pt-2 border-t border-slate-800">
