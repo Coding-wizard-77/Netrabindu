@@ -1,4 +1,4 @@
-# GujHack — Hybrid Edge-First CCTV Intelligence Platform
+# NetraBindu — Hybrid Edge-First CCTV Intelligence Platform
 
 > Gujarat Police Innovation Challenge 2026
 
