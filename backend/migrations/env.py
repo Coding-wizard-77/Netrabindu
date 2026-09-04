@@ -4,11 +4,16 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
 
-# Ensure workspace root is in sys.path
+# Ensure workspace root and backend are in sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from apps.api.config import settings
-from services.camera_registry.models import Base
+try:
+    from backend.config import settings
+    from backend.services.camera_registry.models import Base
+except ImportError:
+    from config import settings
+    from services.camera_registry.models import Base
 
 config = context.config
 if config.config_file_name is not None:

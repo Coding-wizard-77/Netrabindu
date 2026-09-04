@@ -4,10 +4,16 @@ import sys
 # Ensure repository root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from apps.api.config import settings
-from apps.api.database import get_db_context, init_db
-from apps.api.dependencies import hash_password
-from services.camera_registry.models import User, Role, Department
+try:
+    from backend.config import settings
+    from backend.database import get_db_context, init_db
+    from backend.dependencies import hash_password
+    from backend.services.camera_registry.models import User, Role, Department
+except ImportError:
+    from config import settings
+    from database import get_db_context, init_db
+    from dependencies import hash_password
+    from services.camera_registry.models import User, Role, Department
 
 def provision_admin(
     username: str = settings.ADMIN_USERNAME,

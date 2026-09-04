@@ -1,0 +1,1 @@
+"""Legacy router compatibility package."""

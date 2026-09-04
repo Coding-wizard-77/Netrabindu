@@ -4,8 +4,12 @@ import argparse
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from apps.api.database import get_db_context
-from services.camera_registry.service import camera_registry_service
+try:
+    from backend.database import get_db_context
+    from backend.services.camera_registry.service import camera_registry_service
+except ImportError:
+    from database import get_db_context
+    from services.camera_registry.service import camera_registry_service
 
 def import_csv(file_path: str):
     if not os.path.exists(file_path):

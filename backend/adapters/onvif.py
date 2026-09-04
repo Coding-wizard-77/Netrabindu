@@ -4,9 +4,14 @@ import socket
 import uuid
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Any, Optional, AsyncIterator
-from adapters.base import (
-    VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
-)
+try:
+    from backend.adapters.base import (
+        VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
+    )
+except ImportError:
+    from adapters.base import (
+        VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
+    )
 
 logger = logging.getLogger(__name__)
 

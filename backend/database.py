@@ -3,8 +3,12 @@ from contextlib import contextmanager
 from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from apps.api.config import settings
-from services.camera_registry.models import Base
+try:
+    from backend.config import settings
+    from backend.services.camera_registry.models import Base
+except ImportError:
+    from config import settings
+    from services.camera_registry.models import Base
 
 # Sync database setup for reliable execution across environments
 sync_db_url = settings.SYNC_DATABASE_URL

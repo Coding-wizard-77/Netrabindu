@@ -5,9 +5,14 @@ from typing import Optional, List
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from apps.api.config import settings
-from apps.api.database import get_db
-from services.camera_registry.models import User, Role, Department
+try:
+    from backend.config import settings
+    from backend.database import get_db
+    from backend.services.camera_registry.models import User, Role, Department
+except ImportError:
+    from config import settings
+    from database import get_db
+    from services.camera_registry.models import User, Role, Department
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
