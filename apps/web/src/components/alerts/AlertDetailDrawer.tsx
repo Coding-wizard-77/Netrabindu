@@ -6,7 +6,10 @@ import { PlateBadge } from '../anpr/PlateBadge';
 import { AlertActionButtons } from './AlertActionButtons';
 import { formatToIST } from '../../utils/date';
 import { EvidencePlayer } from '../video/EvidencePlayer';
-import { MapPin, Shield, Clock, UserCheck, Radio } from 'lucide-react';
+import { VahanVehicleDossier } from '../police/VahanVehicleDossier';
+import { Section65BCertificateModal } from '../police/Section65BCertificateModal';
+import { NakabandiLockdownModal } from '../police/NakabandiLockdownModal';
+import { MapPin, Shield, Clock, UserCheck, Radio, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { Button } from '../common/Button';
 
 interface AlertDetailDrawerProps {
@@ -26,10 +29,12 @@ export const AlertDetailDrawer: React.FC<AlertDetailDrawerProps> = ({
   onDispatch,
   onResolve,
 }) => {
-  const [dispatchUnit, setDispatchUnit] = useState('');
-  const [operatorNotes, setOperatorNotes] = useState('');
+  const [dispatchUnit, setDispatchUnit] = useState('AHM-PCR-14 (S.G. Highway Interceptor)');
+  const [operatorNotes, setOperatorNotes] = useState('Intercept suspect vehicle and verify driver credentials.');
   const [showDispatchForm, setShowDispatchForm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [cert65BOpen, setCert65BOpen] = useState(false);
+  const [nakabandiOpen, setNakabandiOpen] = useState(false);
 
   if (!alert) return null;
 
@@ -48,11 +53,11 @@ export const AlertDetailDrawer: React.FC<AlertDetailDrawerProps> = ({
     <Drawer
       isOpen={isOpen}
       onClose={onClose}
-      title="Incident Response & Dispatch"
+      title="Police Incident Dispatch & Intercept"
       subtitle={`Alert ID: ${alert.id}`}
       width="lg"
     >
-      <div className="space-y-4">
+      <div className="space-y-4 font-mono text-xs">
         {/* Status & Severity Bar */}
         <div className="p-3 bg-slate-900/70 rounded-xl border border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -62,6 +67,24 @@ export const AlertDetailDrawer: React.FC<AlertDetailDrawerProps> = ({
           <span className="text-xs font-mono text-slate-400">
             {formatToIST(alert.occurred_at)}
           </span>
+        </div>
+
+        {/* Quick Police Action Bar */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setNakabandiOpen(true)}
+            className="p-2 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-400 hover:bg-rose-600/30 flex items-center justify-center gap-1.5 font-bold transition-colors"
+          >
+            <ShieldAlert className="w-4 h-4" />
+            Trigger Nakabandi
+          </button>
+          <button
+            onClick={() => setCert65BOpen(true)}
+            className="p-2 rounded-xl bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-600/30 flex items-center justify-center gap-1.5 font-bold transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4" />
+            Sec 65B Certificate
+          </button>
         </div>
 
         {/* Identification Match Breakdown */}
@@ -91,6 +114,9 @@ export const AlertDetailDrawer: React.FC<AlertDetailDrawerProps> = ({
           </div>
         </div>
 
+        {/* VAHAN Vehicle Dossier */}
+        <VahanVehicleDossier plate={alert.detected_identifier} isStolen={true} />
+
         {/* Camera & GIS Location */}
         <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800 text-xs space-y-1">
           <div className="flex items-center gap-1.5 font-bold text-slate-200">
@@ -109,10 +135,10 @@ export const AlertDetailDrawer: React.FC<AlertDetailDrawerProps> = ({
         {/* Dispatch Form Trigger */}
         {showDispatchForm ? (
           <div className="p-4 bg-slate-900 rounded-xl border border-cyan-500/40 space-y-3">
-            <h5 className="text-xs font-bold text-white uppercase font-mono">Assign Tactical Unit</h5>
+            <h5 className="text-xs font-bold text-white uppercase font-mono">Assign PCR Interceptor Unit</h5>
             <input
               type="text"
-              placeholder="e.g. Patrol Car 14 / Ahmedabad Traffic Zone 1"
+              placeholder="e.g. AHM-PCR-14 / Ahmedabad Traffic Zone 1"
               value={dispatchUnit}
               onChange={(e) => setDispatchUnit(e.target.value)}
               className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white font-mono"
@@ -129,7 +155,7 @@ export const AlertDetailDrawer: React.FC<AlertDetailDrawerProps> = ({
                 Cancel
               </Button>
               <Button size="sm" variant="primary" onClick={handleDispatchSubmit} loading={actionLoading}>
-                Confirm Dispatch
+                Confirm PCR Dispatch
               </Button>
             </div>
           </div>
@@ -140,12 +166,24 @@ export const AlertDetailDrawer: React.FC<AlertDetailDrawerProps> = ({
               alert={alert}
               onAcknowledge={(id) => onAcknowledge(id)}
               onDispatch={() => setShowDispatchForm(true)}
-              onResolve={(id) => onResolve(id, 'Resolved by Command Center')}
-              onMarkFalsePositive={(id) => onResolve(id, 'Operator marked false positive', true)}
+              onResolve={(id) => onResolve(id, 'Resolved by Police Command')}
+              onMarkFalsePositive={(id) => onResolve(id, 'Officer marked false positive', true)}
               loading={actionLoading}
             />
           </div>
         )}
+
+        {/* Modals */}
+        <Section65BCertificateModal
+          isOpen={cert65BOpen}
+          onClose={() => setCert65BOpen(false)}
+          plateNumber={alert.detected_identifier}
+        />
+        <NakabandiLockdownModal
+          isOpen={nakabandiOpen}
+          onClose={() => setNakabandiOpen(false)}
+          targetPlate={alert.detected_identifier}
+        />
       </div>
     </Drawer>
   );

@@ -6,7 +6,10 @@ import { VehicleTimeline } from '../components/investigation/VehicleTimeline';
 import { RouteMapSynchronizer } from '../components/investigation/RouteMapSynchronizer';
 import { InvestigationReportExport } from '../components/investigation/InvestigationReportExport';
 import { PlateConfidenceBreakdown } from '../components/investigation/PlateConfidenceBreakdown';
-import { Search, MapPin, AlertCircle, FileText, Gauge, Clock, ShieldCheck, Compass } from 'lucide-react';
+import { VahanVehicleDossier } from '../components/police/VahanVehicleDossier';
+import { Section65BCertificateModal } from '../components/police/Section65BCertificateModal';
+import { NakabandiLockdownModal } from '../components/police/NakabandiLockdownModal';
+import { Search, MapPin, AlertCircle, FileText, Gauge, Clock, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { formatLicensePlateDisplay } from '../utils/normalizer';
 
 export const InvestigationView: React.FC = () => {
@@ -15,6 +18,8 @@ export const InvestigationView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
+  const [cert65BOpen, setCert65BOpen] = useState(false);
+  const [nakabandiOpen, setNakabandiOpen] = useState(false);
 
   const handleSearch = async (plate: string, from?: string, to?: string) => {
     try {
@@ -40,10 +45,10 @@ export const InvestigationView: React.FC = () => {
           <span className="p-1.5 rounded-lg bg-cyan-600/20 text-cyan-500 border border-cyan-500/40">
             <Search className="w-5 h-5" />
           </span>
-          VEHICLE INVESTIGATION &amp; GIS ROUTE RECONSTRUCTION
+          POLICE VEHICLE INVESTIGATION &amp; GIS ROUTE RECONSTRUCTION
         </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
-          Observed-only camera chronologies • Verified PostGIS camera geometry • Explicit unobserved gaps
+          Court-admissible electronic trail • Section 65B Certificate • VAHAN 4.0 Integration
         </p>
       </div>
 
@@ -64,25 +69,41 @@ export const InvestigationView: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-xl bg-cyan-600/20 text-cyan-400 border border-cyan-500/40 flex items-center justify-center font-mono font-bold">
-                  GJ
+                  IND
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-slate-900 dark:text-white font-mono tracking-widest uppercase">
                     {formatLicensePlateDisplay(routeData.normalized_plate)}
                   </h2>
                   <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                    State Core Target Tracking Record
+                    State Police Core Target Sighting Record
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setNakabandiOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-colors shadow"
+                >
+                  <ShieldAlert className="w-3.5 h-3.5" />
+                  Trigger Nakabandi
+                </button>
+
+                <button
+                  onClick={() => setCert65BOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-colors shadow"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Sec 65B Certificate
+                </button>
+
                 <button
                   onClick={() => setShowReport(!showReport)}
                   className="px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 text-xs font-mono font-bold text-cyan-600 dark:text-cyan-400 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  {showReport ? 'Hide Official Dossier' : 'View Official Dossier'}
+                  {showReport ? 'Hide Dossier' : 'Print Dossier'}
                 </button>
               </div>
             </div>
@@ -114,6 +135,9 @@ export const InvestigationView: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {/* VAHAN 4.0 Vehicle & Owner Registry Dossier */}
+            <VahanVehicleDossier plate={routeData.normalized_plate} isStolen={true} />
 
             {/* Character-by-Character OCR Confidence Breakdown */}
             <PlateConfidenceBreakdown
@@ -148,6 +172,18 @@ export const InvestigationView: React.FC = () => {
           Enter a target license plate number above to reconstruct observed movement history.
         </div>
       )}
+
+      {/* Modals */}
+      <Section65BCertificateModal
+        isOpen={cert65BOpen}
+        onClose={() => setCert65BOpen(false)}
+        plateNumber={routeData?.normalized_plate || 'GJ 01 AB 1234'}
+      />
+      <NakabandiLockdownModal
+        isOpen={nakabandiOpen}
+        onClose={() => setNakabandiOpen(false)}
+        targetPlate={routeData?.normalized_plate || 'GJ 01 AB 1234'}
+      />
     </div>
   );
 };

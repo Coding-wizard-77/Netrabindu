@@ -7,14 +7,16 @@ import { LiveRadarScanner } from '../components/dashboard/LiveRadarScanner';
 import { DepartmentDistributionChart } from '../components/dashboard/DepartmentDistributionChart';
 import { IncidentHotspotMatrix } from '../components/dashboard/IncidentHotspotMatrix';
 import { TacticalQuickActionBar } from '../components/dashboard/TacticalQuickActionBar';
+import { PCRVanDispatcher } from '../components/police/PCRVanDispatcher';
+import { DailyPoliceSitRepModal } from '../components/police/DailyPoliceSitRepModal';
+import { NakabandiLockdownModal } from '../components/police/NakabandiLockdownModal';
 import { BandwidthSavingsChart } from '../components/telemetry/BandwidthSavingsChart';
-import { InferenceComputeChart } from '../components/telemetry/InferenceComputeChart';
 import { SentinelActivityGauge } from '../components/telemetry/SentinelActivityGauge';
 import { camerasApi } from '../api/cameras';
 import { alertsApi } from '../api/alerts';
 import { healthApi } from '../api/health';
 import { Camera, Alert, SystemMetrics } from '../types';
-import { Camera as CameraIcon, AlertTriangle, Radio, Activity, Cpu, Shield, ArrowRight, Zap } from 'lucide-react';
+import { Camera as CameraIcon, AlertTriangle, Radio, Activity, Cpu, Shield, ArrowRight, Zap, ShieldAlert, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const DashboardView: React.FC = () => {
@@ -22,6 +24,8 @@ export const DashboardView: React.FC = () => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sitRepOpen, setSitRepOpen] = useState(false);
+  const [nakabandiOpen, setNakabandiOpen] = useState(false);
   const navigate = useNavigate();
 
   const fetchDashboardData = async () => {
@@ -53,33 +57,49 @@ export const DashboardView: React.FC = () => {
     <div className="space-y-6">
       {/* Tactical Quick Action Bar */}
       <TacticalQuickActionBar
-        onExportReport={() => navigate('/investigation')}
+        onExportReport={() => setSitRepOpen(true)}
         onRefreshGrid={fetchDashboardData}
         onTriggerOnboarding={() => navigate('/cameras')}
       />
 
-      {/* Top Banner & Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Police Command Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 rounded-2xl border border-blue-500/30">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5 font-mono">
-            <span className="p-1.5 rounded-lg bg-cyan-600/20 text-cyan-500 border border-cyan-500/40">
-              <Shield className="w-5 h-5" />
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-mono font-bold text-[10px] uppercase">
+              GUJARAT POLICE STATE CORE
             </span>
-            TACTICAL COMMAND &amp; CONTROL OPERATIONS
+            <span className="text-xs font-mono text-emerald-400 font-bold flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+              GRID ACTIVE
+            </span>
+          </div>
+          <h1 className="text-xl font-black tracking-tight text-white font-mono mt-1">
+            INTEGRATED POLICE COMMAND &amp; CONTROL OPERATIONS CENTER
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
-            26 Government Departments • Heterogeneous Edge-First CCTV Surveillance Grid
+          <p className="text-xs text-slate-400 font-mono">
+            Unified real-time tactical oversight across 26 Departmental CCTV networks &amp; 33 Police Districts
           </p>
         </div>
 
-        <button
-          onClick={() => navigate('/live')}
-          className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-mono font-bold flex items-center gap-2 transition-all shadow-lg shadow-cyan-950/50 hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Radio className="w-4 h-4 animate-pulse" />
-          <span>Launch Multi-Grid Video Wall</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setNakabandiOpen(true)}
+            className="py-2 px-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-colors shadow-lg shadow-rose-950/50"
+          >
+            <ShieldAlert className="w-4 h-4" />
+            <span>State Nakabandi</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/live')}
+            className="py-2 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-mono font-bold flex items-center gap-2 transition-colors shadow-lg shadow-cyan-950/50"
+          >
+            <Radio className="w-4 h-4" />
+            <span>Video Wall</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Real-time Dynamic KPI Cards */}
@@ -104,7 +124,7 @@ export const DashboardView: React.FC = () => {
         <StatCard
           title="Critical Active Alerts"
           value={metrics?.active_critical_alerts || alerts.filter((a) => a.severity === 'CRITICAL' && a.state === 'NEW').length}
-          subtitle="Immediate Dispatch Required"
+          subtitle="Immediate PCR Dispatch Required"
           icon={<AlertTriangle className="w-5 h-5" />}
           variant="rose"
         />
@@ -128,21 +148,10 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* 26 Departments Distribution & Always-On Sentinel Activity */}
+      {/* Police PCR Interceptor Fleet & 26 Department Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PCRVanDispatcher />
         <DepartmentDistributionChart />
-        <div className="space-y-4">
-          <SentinelActivityGauge
-            triggerRatePerMin={metrics?.events_per_minute ? Math.floor(metrics.events_per_minute * 0.45) : 62}
-            activeEscalations={cameras.filter((c) => c.current_quality_state === 'Active' || c.current_quality_state === 'Critical').length || 4}
-          />
-          {alerts.length > 0 && (
-            <AlertBanner
-              alert={alerts[0]}
-              onOpenDetail={() => navigate('/alerts')}
-            />
-          )}
-        </div>
       </div>
 
       {/* GIS Command Map & Telemetry Efficiency Curves */}
@@ -177,6 +186,10 @@ export const DashboardView: React.FC = () => {
 
       {/* Live Intelligence Stream */}
       <LiveEventStream />
+
+      {/* Modals */}
+      <DailyPoliceSitRepModal isOpen={sitRepOpen} onClose={() => setSitRepOpen(false)} />
+      <NakabandiLockdownModal isOpen={nakabandiOpen} onClose={() => setNakabandiOpen(false)} targetPlate="GJ 01 AB 1234" />
     </div>
   );
 };
