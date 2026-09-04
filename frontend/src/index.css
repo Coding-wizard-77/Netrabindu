@@ -4,8 +4,112 @@
 
 @layer base {
   body {
-    @apply bg-slate-100 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200;
+    @apply bg-slate-950 text-slate-100 min-h-screen transition-colors duration-200 antialiased font-sans selection:bg-cyan-500/30 selection:text-cyan-300;
   }
+}
+
+/* Futuristic Cyber Grid Background */
+.dark body {
+  background-color: #030712;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+}
+
+.light body {
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.06) 0%, transparent 60%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  @apply bg-navy-900/70 dark:bg-navy-950/80 backdrop-blur-xl border border-navy-800/80 dark:border-navy-700/60 shadow-glass transition-all duration-200;
+}
+
+.glass-panel-elevated {
+  @apply bg-navy-900/85 dark:bg-navy-950/90 backdrop-blur-2xl border border-navy-700/80 shadow-glass-elevated;
+}
+
+.glass-panel-interactive {
+  @apply bg-navy-900/70 dark:bg-navy-950/80 backdrop-blur-xl border border-navy-800/80 dark:border-navy-700/60 shadow-glass transition-all duration-200 hover:border-cyan-500/50 hover:shadow-glow-cyan hover:-translate-y-0.5 cursor-pointer;
+}
+
+.glass-panel-danger {
+  @apply bg-rose-950/40 backdrop-blur-xl border border-rose-600/40 shadow-glow-red;
+}
+
+/* HUD Tech Corner Brackets */
+.hud-corner {
+  position: relative;
+}
+.hud-corner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid rgba(6, 182, 212, 0.6);
+  border-left: 2px solid rgba(6, 182, 212, 0.6);
+}
+.hud-corner::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid rgba(6, 182, 212, 0.6);
+  border-right: 2px solid rgba(6, 182, 212, 0.6);
+}
+
+/* Authentic Indian License Plate Styling */
+.indian-plate-private {
+  display: inline-flex;
+  align-items: center;
+  background: #ffffff;
+  color: #111827;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  border: 2px solid #000000;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  overflow: hidden;
+  user-select: none;
+}
+.indian-plate-commercial {
+  display: inline-flex;
+  align-items: center;
+  background: #facc15;
+  color: #000000;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  border: 2px solid #000000;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  overflow: hidden;
+  user-select: none;
+}
+.indian-plate-strip {
+  background: #1e40af;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 4px 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-right: 1.5px solid #000000;
 }
 
 /* Custom Tactical Scrollbars */
@@ -14,37 +118,45 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-slate-200 dark:bg-[#090d16];
+  background: rgba(3, 7, 18, 0.8);
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-400 dark:bg-[#1e293b] rounded;
+  background: rgba(30, 50, 93, 0.8);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-500 dark:bg-[#334155];
+  background: rgba(6, 182, 212, 0.5);
 }
 
-/* Leaflet Customizations for Dark / Light Tactical Theme */
+/* Leaflet GIS Styling */
 .leaflet-container {
   font-family: inherit;
+  border-radius: inherit;
 }
 .dark .leaflet-container {
-  background: #090d16 !important;
+  background: #030712 !important;
 }
 .light .leaflet-container {
   background: #f1f5f9 !important;
 }
-
 .leaflet-popup-content-wrapper {
-  @apply bg-white dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-0 overflow-hidden;
+  background: rgba(7, 13, 30, 0.95) !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(6, 182, 212, 0.4) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7) !important;
+  backdrop-filter: blur(12px) !important;
+  padding: 0 !important;
 }
 .leaflet-popup-content {
   margin: 0 !important;
   line-height: inherit !important;
 }
 .leaflet-popup-tip {
-  @apply bg-white dark:bg-[#0f172a];
+  background: rgba(7, 13, 30, 0.95) !important;
 }
 
+/* Print Optimization */
 @media print {
   body {
     background: white !important;

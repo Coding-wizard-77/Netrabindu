@@ -1,144 +1,174 @@
 import React, { useState } from 'react';
-import { Modal } from '../common/Modal';
-import { Button } from '../common/Button';
-import { ShieldAlert, Radio, CheckCircle, MapPin, AlertTriangle } from 'lucide-react';
+import { X, Lock, Radio, MapPin, CheckCircle2 } from 'lucide-react';
+import { tacticalAudio } from '../../utils/audio';
 
-interface NakabandiLockdownModalProps {
+export interface NakabandiLockdownModalProps {
   isOpen: boolean;
   onClose: () => void;
-  targetPlate: string;
+  targetPlate?: string;
+  initialPlate?: string;
+  plate?: string;
 }
 
 export const NakabandiLockdownModal: React.FC<NakabandiLockdownModalProps> = ({
   isOpen,
   onClose,
   targetPlate,
+  initialPlate,
+  plate,
 }) => {
-  const [radiusKm, setRadiusKm] = useState('15');
-  const [reason, setReason] = useState('Suspect Vehicle Fleeing Serious Crime Scene (FIR CR-142/26)');
-  const [notifiedCheckpoints, setNotifiedCheckpoints] = useState<string[]>([]);
-  const [isActivated, setIsActivated] = useState(false);
+  const defaultPlate = targetPlate || initialPlate || plate || 'GJ01AB1234';
+  const [radiusKm, setRadiusKm] = useState<number>(15);
+  const [activePlate, setActivePlate] = useState<string>(defaultPlate);
+  const [incidentType, setIncidentType] = useState<string>('ARMED_ROBBERY_FLEEING');
+  const [isBroadcasted, setIsBroadcasted] = useState<boolean>(false);
 
-  const checkpointsList = [
-    'S.G. Highway Toll Plaza Checkpost',
-    'Sanand Crossroad Police Checkpost',
-    'Iscon-Bopal Ring Road Perimeter',
-    'SP Ring Road Odhav Exit Toll',
-    'Gandhinagar Koba Circle Barrier',
-    'Narol Circle Highway Checkpoint',
-  ];
+  if (!isOpen) return null;
 
-  const handleActivate = () => {
-    setNotifiedCheckpoints(checkpointsList);
-    setIsActivated(true);
+  const checkposts = [
+    { name: 'SP Ring Road Bopal Toll Plaza', dist: '4.2 km', eta: '6 mins', contact: '+91 79 2754 0100', status: 'ACTIVE' },
+    { name: 'SG Highway Chanakyapuri Chokdi', dist: '7.8 km', eta: '11 mins', contact: '+91 79 2754 0102', status: 'ACTIVE' },
+    { name: 'Geeta Mandir Central Checkpost', dist: '12.4 km', eta: '18 mins', contact: '+91 79 2754 0105', status: 'READY' },
+    { name: 'Kalupur Railway Station Crossroad', dist: '14.1 km', eta: '21 mins', contact: '+91 79 2754 0108', status: 'READY' },
+    { name: 'Narol Industrial Toll Barrier', dist: '18.6 km', eta: '26 mins', contact: '+91 79 2754 0110', status: 'ALERTED' },
+  ].filter((cp) => parseFloat(cp.dist) <= radiusKm + 5);
+
+  const handleTriggerLockdown = () => {
+    tacticalAudio.playLockdownKlaxon();
+    setIsBroadcasted(true);
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Regional Roadblock & Checkpost Alert (નાકાબંધી / NAKABANDI)"
-      subtitle="Broadcast emergency intercept perimeter across Gujarat Police checkposts & toll plazas"
-      size="lg"
-    >
-      <div className="space-y-4 font-mono text-xs">
-        {isActivated ? (
-          <div className="p-6 bg-emerald-950/30 border border-emerald-500/40 rounded-2xl text-emerald-300 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                <CheckCircle className="w-8 h-8" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white uppercase">
-                  NAKABANDI PERIMETER ACTIVE ({radiusKm} KM RADIUS)
-                </h3>
-                <p className="text-xs text-emerald-200 mt-0.5">
-                  Emergency intercept alert transmitted to 6 Toll Plazas &amp; 14 PCR Field Interceptors.
-                </p>
-              </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+      <div className="relative w-full max-w-2xl rounded-xl border border-red-700/60 bg-navy-950 p-6 shadow-2xl text-slate-100">
+        <div className="flex items-center justify-between border-b border-navy-800 pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="rounded-lg bg-red-500/20 p-2 text-red-400 border border-red-500/40 animate-pulse">
+              <Lock className="h-6 w-6" />
             </div>
-
-            <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-[11px]">
-              <div className="text-slate-400 font-bold uppercase">Activated Checkpoints:</div>
-              <div className="grid grid-cols-2 gap-2 text-white">
-                {notifiedCheckpoints.map((cp) => (
-                  <div key={cp} className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    <span>{cp}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button variant="tactical" onClick={onClose}>
-                Return to Command Center
-              </Button>
+            <div>
+              <h2 className="text-lg font-bold uppercase tracking-wider text-slate-100 flex items-center gap-2">
+                Nakabandi Checkpost Grid Lockdown
+                <span className="text-xs px-2 py-0.5 rounded bg-red-600 text-white font-mono">EMERGENCY PROTOCOL</span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Seal perimeter checkposts & dispatch automated intercept vector alerts
+              </p>
             </div>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="p-4 bg-rose-950/20 border border-rose-500/40 rounded-xl text-rose-200 flex items-start gap-3">
-              <ShieldAlert className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-              <div>
-                <strong className="text-white block uppercase">High-Priority Police Intercept Broadcast</strong>
-                <span>
-                  This action will alert all automatic number plate recognition (ANPR) cameras at toll gates and dispatch alerts to active PCR vans for suspect vehicle: <strong className="text-white underline">{targetPlate}</strong>.
-                </span>
-              </div>
-            </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-navy-800 hover:text-slate-100 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
+        <div className="mt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-slate-400 block mb-1">Perimeter Lockdown Radius</label>
-              <select
-                value={radiusKm}
-                onChange={(e) => setRadiusKm(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
-              >
-                <option value="10">10 km Radius (Immediate City Core)</option>
-                <option value="15">15 km Radius (Outer Ring Road & City Tolls)</option>
-                <option value="25">25 km Radius (District Highway Exits)</option>
-                <option value="50">50 km Radius (State Interstate Corridors)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-slate-400 block mb-1">Incident / Dispatch Rationale</label>
+              <label className="text-[10px] font-mono uppercase text-slate-400 font-bold">Target License Plate</label>
               <input
                 type="text"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white"
+                value={activePlate}
+                onChange={(e) => setActivePlate(e.target.value.toUpperCase())}
+                className="mt-1 w-full rounded-lg border border-red-700 bg-red-950/40 px-3 py-1.5 font-mono text-sm font-bold text-red-300 focus:outline-none uppercase"
               />
             </div>
-
-            <div className="p-3 bg-slate-900 rounded-xl border border-slate-800 space-y-1.5">
-              <div className="text-[10px] text-slate-400 uppercase font-bold">Targeted Checkposts (Preview):</div>
-              <div className="grid grid-cols-2 gap-1.5 text-[11px] text-slate-300">
-                {checkpointsList.slice(0, 4).map((cp) => (
-                  <div key={cp} className="flex items-center gap-1.5">
-                    <MapPin className="w-3 h-3 text-cyan-400" />
-                    <span>{cp}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
-              <Button variant="ghost" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button
-                variant="danger"
-                icon={<Radio className="w-4 h-4" />}
-                onClick={handleActivate}
+            <div>
+              <label className="text-[10px] font-mono uppercase text-slate-400 font-bold">Emergency Category</label>
+              <select
+                value={incidentType}
+                onChange={(e) => setIncidentType(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-navy-700 bg-navy-900 px-3 py-1.5 text-xs text-slate-200 focus:outline-none font-medium"
               >
-                Trigger State Nakabandi
-              </Button>
+                <option value="ARMED_ROBBERY_FLEEING">Armed Robbery / Fleeing Suspect</option>
+                <option value="HIT_AND_RUN_FATAL">Fatal Hit & Run</option>
+                <option value="RED_NOTICE_TERROR">Red Notice / National Security</option>
+                <option value="KIDNAPPING_AMBER_ALERT">Abduction / Kidnapping</option>
+              </select>
             </div>
           </div>
-        )}
+
+          <div className="rounded-lg border border-navy-800 bg-navy-900/60 p-3 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-300">Lockdown Perimeter Radius:</span>
+              <span className="font-mono font-bold text-accent-cyan text-sm">{radiusKm} KM RADIUS</span>
+            </div>
+            <input
+              type="range"
+              min="5"
+              max="50"
+              step="5"
+              value={radiusKm}
+              onChange={(e) => setRadiusKm(parseInt(e.target.value))}
+              className="w-full h-1.5 bg-navy-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-slate-500">
+              <span>5 km (City Center)</span>
+              <span>25 km (Ring Road Grid)</span>
+              <span>50 km (State Highway Perimeter)</span>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Engaged Checkposts & Toll Gates ({checkposts.length})
+              </span>
+              <span className="text-[10px] text-emerald-400 font-mono">ALL CHANNELS LIVE</span>
+            </div>
+            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+              {checkposts.map((cp, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between rounded-lg bg-navy-900 p-2 border border-navy-800 text-xs"
+                >
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-3.5 w-3.5 text-red-400" />
+                    <span className="font-medium text-slate-200">{cp.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-3 font-mono text-[11px]">
+                    <span className="text-slate-400">{cp.dist}</span>
+                    <span className="text-amber-400 font-bold">ETA ~{cp.eta}</span>
+                    <span className="rounded bg-emerald-950 px-1.5 py-0.2 text-[9px] text-emerald-400 font-bold border border-emerald-800">
+                      {cp.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {isBroadcasted && (
+            <div className="rounded-lg bg-red-950/60 border border-red-500/50 p-3 flex items-center space-x-3 text-red-300 text-xs animate-in zoom-in-95 duration-150">
+              <CheckCircle2 className="h-5 w-5 text-red-400 flex-shrink-0 animate-bounce" />
+              <div>
+                <div className="font-bold">NAKABANDI PERIMETER SEAL INITIATED</div>
+                <div className="text-[11px] text-red-300/80">
+                  SMS alerts & 112 PCR dispatch orders transmitted to {checkposts.length} checkposts. Spikes & barriers deployed.
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex items-center justify-between border-t border-navy-800 pt-4">
+          <button
+            onClick={onClose}
+            className="rounded-lg bg-navy-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-navy-700"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleTriggerLockdown}
+            className="flex items-center space-x-2 rounded-lg bg-red-600 px-5 py-2 text-xs font-bold text-white hover:bg-red-500 shadow-lg shadow-red-600/30 transition-all active:scale-95"
+          >
+            <Radio className="h-4 w-4 animate-pulse" />
+            <span>EXECUTE NAKABANDI LOCKDOWN</span>
+          </button>
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 };

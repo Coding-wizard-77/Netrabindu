@@ -7,6 +7,7 @@ interface UIState {
   setTheme: (theme: ThemeMode) => void;
   toggleTheme: () => void;
   sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
   activeDrawer: string | null;
   drawerData: any | null;
@@ -44,6 +45,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   },
 
   sidebarOpen: true,
+  setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   activeDrawer: null,
   drawerData: null,

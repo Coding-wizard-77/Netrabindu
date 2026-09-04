@@ -1,165 +1,120 @@
-import React, { useState, useEffect } from 'react';
-import { Radio, Shield, AlertTriangle, Crosshair, Zap } from 'lucide-react';
-
-interface RadarBlip {
-  id: string;
-  label: string;
-  region: string;
-  x: number; // percentage 0-100
-  y: number; // percentage 0-100
-  type: 'ALERT' | 'DETECTION' | 'SENTINEL';
-  confidence: number;
-  time: string;
-}
-
-const mockBlips: RadarBlip[] = [
-  { id: 'b1', label: 'GJ01AB1234', region: 'Ahmedabad S.G. Hwy', x: 62, y: 38, type: 'ALERT', confidence: 0.98, time: '1s ago' },
-  { id: 'b2', label: 'GJ27C5678', region: 'Gandhinagar Sec 11', x: 45, y: 25, type: 'DETECTION', confidence: 0.95, time: '4s ago' },
-  { id: 'b3', label: 'GJ05XY9901', region: 'Surat Ring Road', x: 70, y: 72, type: 'SENTINEL', confidence: 0.91, time: '12s ago' },
-  { id: 'b4', label: 'GJ06K4412', region: 'Vadodara Alkapuri', x: 30, y: 60, type: 'DETECTION', confidence: 0.94, time: '8s ago' },
-  { id: 'b5', label: 'GJ03Z1122', region: 'Rajkot Kalawad Rd', x: 20, y: 45, type: 'ALERT', confidence: 0.99, time: '2s ago' },
-];
+import React from 'react';
+import { Radio, ShieldAlert, Navigation, Zap } from 'lucide-react';
 
 export const LiveRadarScanner: React.FC = () => {
-  const [activeBlip, setActiveBlip] = useState<RadarBlip | null>(mockBlips[0]);
-  const [sweepAngle, setSweepAngle] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSweepAngle((prev) => (prev + 2) % 360);
-    }, 30);
-    return () => clearInterval(timer);
-  }, []);
+  const radarTargets = [
+    { id: 1, plate: 'GJ01AB1234', cam: 'SG Highway Chanakyapuri', dist: '1.2 km', bearing: 'NE 42°', threat: 'CRITICAL' },
+    { id: 2, plate: 'GJ05CD5678', cam: 'SP Ring Road Bopal Toll', dist: '3.8 km', bearing: 'SW 210°', threat: 'HIGH' },
+    { id: 3, plate: 'GJ27XY9900', cam: 'Geeta Mandir Central Bus Terminus', dist: '5.4 km', bearing: 'SE 135°', threat: 'MEDIUM' },
+  ];
 
   return (
-    <div className="glass-panel p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden">
-      {/* Background Cyber Scanlines */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.03)_1px,transparent_1px)] bg-[size:100%_4px] pointer-events-none" />
-
+    <div className="glass-panel rounded-2xl p-5 relative overflow-hidden border border-navy-700/80 shadow-2xl">
       {/* Header */}
-      <div className="flex items-center justify-between z-10 border-b border-slate-200 dark:border-slate-800 pb-2.5">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-500 animate-pulse">
-            <Crosshair className="w-4 h-4" />
+      <div className="flex items-center justify-between border-b border-navy-800 pb-3 mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
+            <Radio className="w-4 h-4 animate-pulse" />
           </div>
           <div>
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
-              Live Sentinel Radar Sweep
+            <h3 className="text-sm font-black text-white font-mono tracking-wider uppercase">
+              Adaptive Sentinel Proximity Radar
             </h3>
-            <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-              360° Real-Time Target Correlation Grid
-            </span>
+            <p className="text-[10px] font-mono text-slate-400">
+              Active spatial threat interception vectoring • 25 km Perimeter Grid
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-mono font-bold border border-emerald-500/30 flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
+            360° SWEEP LIVE
+          </span>
+        </div>
+      </div>
+
+      {/* Grid: Radar Canvas + Threat Target List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        {/* Radar Graphic */}
+        <div className="relative flex items-center justify-center p-4">
+          <div className="relative h-56 w-56 rounded-full border-2 border-cyan-500/30 bg-navy-950/90 flex items-center justify-center shadow-glow-cyan/20">
+            {/* Concentric rings */}
+            <div className="absolute h-40 w-40 rounded-full border border-cyan-500/25" />
+            <div className="absolute h-24 w-24 rounded-full border border-cyan-500/20" />
+            <div className="absolute h-8 w-8 rounded-full border border-cyan-500/40 bg-cyan-500/10" />
+
+            {/* Grid Crosshairs */}
+            <div className="absolute h-full w-[1px] bg-cyan-500/20" />
+            <div className="absolute w-full h-[1px] bg-cyan-500/20" />
+            <div className="absolute h-full w-[1px] bg-cyan-500/10 rotate-45" />
+            <div className="absolute h-full w-[1px] bg-cyan-500/10 -rotate-45" />
+
+            {/* Rotating Radar Sweep Line */}
+            <div className="absolute inset-0 rounded-full animate-radar-sweep pointer-events-none">
+              <div className="h-1/2 w-1/2 bg-gradient-to-br from-cyan-400/40 to-transparent rounded-tl-full" />
+            </div>
+
+            {/* Target Blips */}
+            <div
+              className="absolute top-12 right-14 h-3 w-3 rounded-full bg-rose-500 shadow-glow-red animate-ping"
+              title="Target: GJ01AB1234"
+            />
+            <div className="absolute top-12 right-14 h-2.5 w-2.5 rounded-full bg-rose-500" />
+
+            <div
+              className="absolute bottom-16 left-12 h-3 w-3 rounded-full bg-amber-400 shadow-glow-amber animate-ping"
+              title="Target: GJ05CD5678"
+            />
+            <div className="absolute bottom-16 left-12 h-2.5 w-2.5 rounded-full bg-amber-400" />
+
+            <div
+              className="absolute bottom-10 right-16 h-2 w-2 rounded-full bg-cyan-400 shadow-glow-cyan animate-pulse"
+              title="Target: GJ27XY9900"
+            />
+
+            {/* Center Position */}
+            <div className="relative z-10 h-2 w-2 rounded-full bg-white shadow-lg" />
           </div>
         </div>
 
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 flex items-center gap-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-          SWEEP ACTIVE
-        </span>
-      </div>
-
-      {/* Main Radar Screen */}
-      <div className="my-4 flex flex-col md:flex-row items-center gap-6 justify-center z-10">
-        {/* Radar Circular Scope */}
-        <div className="relative w-56 h-56 rounded-full border-2 border-cyan-500/30 dark:border-cyan-500/40 bg-slate-950 flex items-center justify-center shadow-inner shadow-cyan-950/60 overflow-hidden">
-          {/* Concentric Grid Rings */}
-          <div className="absolute w-44 h-44 rounded-full border border-cyan-500/20" />
-          <div className="absolute w-32 h-32 rounded-full border border-cyan-500/25" />
-          <div className="absolute w-16 h-16 rounded-full border border-cyan-500/30" />
-
-          {/* Crosshair Axes */}
-          <div className="absolute w-full h-[1px] bg-cyan-500/25" />
-          <div className="absolute h-full w-[1px] bg-cyan-500/25" />
-
-          {/* Rotating Radar Sweep Cone */}
-          <div
-            className="absolute w-full h-full rounded-full origin-center pointer-events-none"
-            style={{
-              transform: `rotate(${sweepAngle}deg)`,
-              background: 'conic-gradient(from 0deg, rgba(6, 182, 212, 0.45) 0deg, rgba(6, 182, 212, 0.0) 60deg, transparent 60deg)',
-            }}
-          />
-
-          {/* Plotted Target Blips */}
-          {mockBlips.map((blip) => {
-            const isAlert = blip.type === 'ALERT';
-            const isSelected = activeBlip?.id === blip.id;
-
-            return (
-              <button
-                key={blip.id}
-                onClick={() => setActiveBlip(blip)}
-                style={{ left: `${blip.x}%`, top: `${blip.y}%` }}
-                className="absolute -translate-x-1/2 -translate-y-1/2 group cursor-pointer focus:outline-none"
-                title={`${blip.label} (${blip.region})`}
+        {/* Real-time Target Intercept Vectors */}
+        <div className="space-y-2.5">
+          <div className="text-[11px] font-mono font-bold text-slate-400 uppercase">
+            Identified Target Proximity Vectors
+          </div>
+          <div className="space-y-2">
+            {radarTargets.map((t) => (
+              <div
+                key={t.id}
+                className="p-2.5 rounded-xl bg-navy-950/80 border border-navy-800 hover:border-cyan-500/40 transition-colors flex items-center justify-between text-xs font-mono"
               >
-                <span className="relative flex h-3.5 w-3.5 items-center justify-center">
-                  <span
-                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                      isAlert ? 'bg-rose-500' : 'bg-cyan-400'
-                    }`}
-                  />
-                  <span
-                    className={`relative inline-flex rounded-full h-2 w-2 ${
-                      isAlert ? 'bg-rose-500' : 'bg-cyan-400'
-                    } ${isSelected ? 'ring-2 ring-white scale-125' : ''}`}
-                  />
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white tracking-widest">{t.plate}</span>
+                    <span
+                      className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                        t.threat === 'CRITICAL'
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                      }`}
+                    >
+                      {t.threat}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate max-w-[180px]">{t.cam}</div>
+                </div>
 
-        {/* Selected Blip Telemetry HUD */}
-        <div className="flex-1 w-full space-y-2 font-mono text-xs">
-          {activeBlip ? (
-            <div className="p-3 bg-slate-900/90 dark:bg-[#070a13] rounded-xl border border-slate-700/80 dark:border-cyan-500/30 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase text-slate-400">Target Lock</span>
-                <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                    activeBlip.type === 'ALERT'
-                      ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                  }`}
-                >
-                  {activeBlip.type}
-                </span>
+                <div className="text-right space-y-0.5">
+                  <div className="text-cyan-400 font-bold">{t.dist}</div>
+                  <div className="text-[10px] text-slate-500 flex items-center gap-1 justify-end">
+                    <Navigation className="w-2.5 h-2.5 text-cyan-500" />
+                    {t.bearing}
+                  </div>
+                </div>
               </div>
-
-              <div className="text-sm font-bold text-white tracking-wider flex items-center justify-between">
-                <span>{activeBlip.label}</span>
-                <span className="text-emerald-400 text-xs">{(activeBlip.confidence * 100).toFixed(1)}%</span>
-              </div>
-
-              <div className="text-[11px] text-slate-300">{activeBlip.region}</div>
-
-              <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
-                <span>Detected: {activeBlip.time}</span>
-                <span className="text-cyan-400">Sentinel Tier 3</span>
-              </div>
-            </div>
-          ) : (
-            <div className="p-4 text-center text-slate-500 text-xs">Select a radar blip to inspect lock.</div>
-          )}
-
-          <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-            <div className="p-2 bg-slate-900/40 dark:bg-slate-950/60 rounded-lg border border-slate-800 flex justify-between">
-              <span className="text-slate-500">ANGULAR VEL:</span>
-              <span className="text-cyan-400 font-bold">120°/s</span>
-            </div>
-            <div className="p-2 bg-slate-900/40 dark:bg-slate-950/60 rounded-lg border border-slate-800 flex justify-between">
-              <span className="text-slate-500">BLIP DENSITY:</span>
-              <span className="text-emerald-400 font-bold">5 Active</span>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className="pt-2 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[10px] font-mono text-slate-500 dark:text-slate-400">
-        <span>GRID RANGE: 50 KM RADIUS</span>
-        <span>LATENCY: 12ms</span>
       </div>
     </div>
   );

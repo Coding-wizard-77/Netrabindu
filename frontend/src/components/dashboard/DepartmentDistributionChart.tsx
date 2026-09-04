@@ -1,84 +1,53 @@
 import React from 'react';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-} from 'recharts';
-import { Building2 } from 'lucide-react';
-
-const departmentData = [
-  { name: 'Traffic Police', count: 18, color: '#06b6d4' },
-  { name: 'CID Crime State Core', count: 12, color: '#3b82f6' },
-  { name: 'Smart City Command', count: 10, color: '#10b981' },
-  { name: 'State Highway Patrol', count: 6, color: '#f59e0b' },
-  { name: 'Ports & Transport', count: 4, color: '#8b5cf6' },
-];
+import { Layers, CheckCircle2 } from 'lucide-react';
 
 export const DepartmentDistributionChart: React.FC = () => {
+  const departments = [
+    { name: 'City Police & Crime Branch', cams: 4210, pct: 34, color: 'from-cyan-500 to-blue-600' },
+    { name: 'Traffic Police & ANPR Grid', cams: 3680, pct: 29, color: 'from-emerald-500 to-teal-600' },
+    { name: 'Highway Patrol & Toll Plazas', cams: 2450, pct: 20, color: 'from-amber-500 to-orange-600' },
+    { name: 'Municipal Smart City (AMC/SMC)', cams: 1420, pct: 11, color: 'from-violet-500 to-purple-600' },
+    { name: 'Port & Coastal Security', cams: 720, pct: 6, color: 'from-rose-500 to-pink-600' },
+  ];
+
   return (
-    <div className="glass-panel p-4 rounded-2xl space-y-3">
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2.5">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-500">
-            <Building2 className="w-4 h-4" />
+    <div className="glass-panel rounded-2xl p-5 border border-navy-700/80 shadow-2xl space-y-4">
+      <div className="flex items-center justify-between border-b border-navy-800 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/30">
+            <Layers className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900 dark:text-white">
-              26 Departments Federation
+            <h3 className="text-sm font-black text-white font-mono tracking-wider uppercase">
+              26 Department CCTV Network Distribution
             </h3>
-            <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-              Departmental Camera Allocation
-            </span>
+            <p className="text-[10px] font-mono text-slate-400">
+              State-wide Unified Inter-Department Surveillance Grid
+            </p>
           </div>
         </div>
-        <span className="text-xs font-mono font-bold text-cyan-500">50 Feeds</span>
+        <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono text-[10px] font-bold border border-blue-500/40">
+          12,480 TOTAL CAMS
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-4">
-        <div className="h-44 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={departmentData}
-                cx="50%"
-                cy="50%"
-                innerRadius={45}
-                outerRadius={68}
-                paddingAngle={4}
-                dataKey="count"
-              >
-                {departmentData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} stroke="#0f172a" strokeWidth={2} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: '#0f172a',
-                  borderColor: '#334155',
-                  borderRadius: '8px',
-                  fontSize: '11px',
-                  fontFamily: 'monospace',
-                  color: '#fff',
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Legend */}
-        <div className="space-y-1.5 text-xs font-mono">
-          {departmentData.map((d) => (
-            <div key={d.name} className="flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
-                <span className="text-slate-700 dark:text-slate-300 text-[11px] truncate max-w-[130px]">{d.name}</span>
-              </div>
-              <span className="font-bold text-slate-900 dark:text-white text-[11px]">{d.count} cams</span>
+      <div className="space-y-3">
+        {departments.map((d, i) => (
+          <div key={i} className="space-y-1 font-mono text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-300 font-medium">{d.name}</span>
+              <span className="text-slate-400">
+                <strong className="text-white font-bold">{d.cams.toLocaleString()}</strong> ({d.pct}%)
+              </span>
             </div>
-          ))}
-        </div>
+            <div className="w-full bg-navy-950 h-2 rounded-full overflow-hidden border border-navy-800">
+              <div
+                className={`h-full bg-gradient-to-r ${d.color} rounded-full transition-all duration-500`}
+                style={{ width: `${d.pct}%` }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
