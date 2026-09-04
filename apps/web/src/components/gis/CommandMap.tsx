@@ -4,6 +4,7 @@ import { Camera, VehicleRoutePoint } from '../../types';
 import { CameraMarker } from './CameraMarker';
 import { RoutePolyline } from './RoutePolyline';
 import { GUJARAT_CENTER } from '../../utils/geo';
+import { useUIStore } from '../../store/useUIStore';
 
 interface CommandMapProps {
   cameras?: Camera[];
@@ -24,19 +25,25 @@ export const CommandMap: React.FC<CommandMapProps> = ({
   onSelectCamera,
   onOpenLiveStream,
   onSelectRoutePoint,
-  className = 'h-[500px] w-full rounded-xl overflow-hidden border border-slate-800',
+  className = 'h-[500px] w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm',
 }) => {
+  const { theme } = useUIStore();
+
+  const tileUrl =
+    theme === 'dark'
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
   return (
     <div className={className}>
       <MapContainer center={center} zoom={zoom} scrollWheelZoom={true} className="h-full w-full">
-        {/* Dark Matter CartoDB Tiles */}
         <TileLayer
+          key={theme}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url={tileUrl}
           maxZoom={19}
         />
 
-        {/* Camera Pins */}
         {cameras.map((camera) => (
           <CameraMarker
             key={camera.id}
@@ -46,7 +53,6 @@ export const CommandMap: React.FC<CommandMapProps> = ({
           />
         ))}
 
-        {/* Vehicle Route & Gap Annotations */}
         {routePoints.length > 0 && (
           <RoutePolyline points={routePoints} onSelectPoint={onSelectRoutePoint} />
         )}

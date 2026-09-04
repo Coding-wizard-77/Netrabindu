@@ -11,12 +11,13 @@ import { useUIStore } from '../../store/useUIStore';
 export const AppLayout: React.FC = () => {
   const { isAuthenticated, initializeFromStorage } = useAuthStore();
   const { addLiveAlert } = useAlertStore();
-  const { audioMuted } = useUIStore();
+  const { audioMuted, initializeTheme } = useUIStore();
   const navigate = useNavigate();
 
   useEffect(() => {
+    initializeTheme();
     initializeFromStorage();
-  }, [initializeFromStorage]);
+  }, [initializeTheme, initializeFromStorage]);
 
   useEffect(() => {
     if (!isAuthenticated && !localStorage.getItem('netrabindu_access_token')) {
@@ -24,7 +25,6 @@ export const AppLayout: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Connect WebSocket on App Mount
   useEffect(() => {
     wsManager.connect();
 
@@ -40,13 +40,13 @@ export const AppLayout: React.FC = () => {
   }, [addLiveAlert, audioMuted]);
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#090d16]">
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors">
       <SystemStatusBar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <div className="flex flex-col flex-1 overflow-hidden">
           <Header />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#090d16]">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100 dark:bg-[#090d16] transition-colors">
             <Outlet />
           </main>
         </div>

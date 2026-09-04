@@ -4,43 +4,45 @@
 
 @layer base {
   body {
-    @apply bg-[#090d16] text-slate-100 min-h-screen;
+    @apply bg-slate-100 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-200;
   }
 }
 
+/* Custom Tactical Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  @apply bg-slate-200 dark:bg-[#090d16];
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 3px;
+  @apply bg-slate-400 dark:bg-[#1e293b] rounded;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  @apply bg-slate-500 dark:bg-[#334155];
 }
 
+/* Leaflet Customizations for Dark / Light Tactical Theme */
 .leaflet-container {
-  background: #090d16 !important;
   font-family: inherit;
 }
+.dark .leaflet-container {
+  background: #090d16 !important;
+}
+.light .leaflet-container {
+  background: #f1f5f9 !important;
+}
+
 .leaflet-popup-content-wrapper {
-  background: #0f172a !important;
-  color: #f1f5f9 !important;
-  border: 1px solid #334155 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
-  padding: 0 !important;
+  @apply bg-white dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl p-0 overflow-hidden;
 }
 .leaflet-popup-content {
   margin: 0 !important;
   line-height: inherit !important;
 }
 .leaflet-popup-tip {
-  background: #0f172a !important;
+  @apply bg-white dark:bg-[#0f172a];
 }
 
 @media print {

@@ -11,7 +11,6 @@ import {
   ListOrdered,
   Activity,
   FileText,
-  Shield,
   Radio,
 } from 'lucide-react';
 import { useUIStore } from '../../store/useUIStore';
@@ -34,21 +33,21 @@ export const Sidebar: React.FC = () => {
   return (
     <aside
       className={clsx(
-        'bg-[#0a0e1a] border-r border-slate-800/80 flex flex-col transition-all duration-300 z-40',
+        'bg-white dark:bg-[#0a0e1a] border-r border-slate-200 dark:border-slate-800/80 flex flex-col transition-all duration-300 z-40',
         sidebarOpen ? 'w-64' : 'w-16'
       )}
     >
       {/* Brand Header */}
-      <div className="h-14 px-4 flex items-center gap-3 border-b border-slate-800/80">
-        <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-emerald-500 p-0.5 flex items-center justify-center shrink-0">
-          <div className="w-full h-full bg-[#0a0e1a] rounded-[6px] flex items-center justify-center">
-            <Radio className="w-4 h-4 text-cyan-400" />
+      <div className="h-14 px-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800/80">
+        <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-emerald-500 p-0.5 flex items-center justify-center shrink-0 shadow-sm">
+          <div className="w-full h-full bg-white dark:bg-[#0a0e1a] rounded-[6px] flex items-center justify-center">
+            <Radio className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
           </div>
         </div>
         {sidebarOpen && (
           <div className="overflow-hidden">
-            <div className="text-sm font-bold text-white tracking-tight">NETRABINDU</div>
-            <div className="text-[10px] font-mono text-slate-400 truncate">Tactical GIS Center</div>
+            <div className="text-sm font-bold text-slate-900 dark:text-white tracking-tight font-mono">NETRABINDU</div>
+            <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 truncate">Tactical GIS Center</div>
           </div>
         )}
       </div>
@@ -65,8 +64,8 @@ export const Sidebar: React.FC = () => {
                 clsx(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium transition-all group select-none',
                   isActive
-                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-semibold shadow-sm shadow-cyan-950/40'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-500/30 font-semibold shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 )
               }
               title={!sidebarOpen ? item.name : undefined}
@@ -80,10 +79,10 @@ export const Sidebar: React.FC = () => {
 
       {/* Footer System Status */}
       {sidebarOpen && (
-        <div className="p-3 border-t border-slate-800/80 m-2 rounded-lg bg-slate-900/60 text-[11px] font-mono text-slate-400">
-          <div className="flex items-center justify-between text-slate-300 font-semibold">
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800/80 m-2 rounded-lg bg-slate-50 dark:bg-slate-900/60 text-[11px] font-mono text-slate-600 dark:text-slate-400">
+          <div className="flex items-center justify-between font-semibold text-slate-800 dark:text-slate-300">
             <span>Adaptive Engine</span>
-            <span className="text-emerald-400">OPTIMAL</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">OPTIMAL</span>
           </div>
           <div className="mt-1 text-[10px] text-slate-500">Auto Bandwidth Scaling Active</div>
         </div>

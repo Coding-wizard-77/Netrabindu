@@ -13,7 +13,7 @@ export const SystemStatusBar: React.FC = () => {
   }, []);
 
   return (
-    <div className="h-7 bg-[#070a11] border-b border-slate-800/80 px-4 flex items-center justify-between text-[11px] font-mono text-slate-400 select-none">
+    <div className="h-7 bg-slate-900 dark:bg-[#070a11] border-b border-slate-800 px-4 flex items-center justify-between text-[11px] font-mono text-slate-300 dark:text-slate-400 select-none transition-colors">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5 text-emerald-400">
           <span className="relative flex h-2 w-2">
@@ -23,12 +23,12 @@ export const SystemStatusBar: React.FC = () => {
           <span className="font-semibold tracking-wider text-[10px] uppercase">STATE CORE CONNECTED</span>
         </div>
 
-        <div className="hidden sm:flex items-center gap-1.5 text-slate-400">
+        <div className="hidden sm:flex items-center gap-1.5 text-slate-300 dark:text-slate-400">
           <Radio className="w-3 h-3 text-cyan-400 animate-pulse" />
           <span>EVENT BUS: LIVE</span>
         </div>
 
-        <div className="hidden md:flex items-center gap-1.5 text-slate-400">
+        <div className="hidden md:flex items-center gap-1.5 text-slate-300 dark:text-slate-400">
           <ShieldCheck className="w-3 h-3 text-indigo-400" />
           <span>GUJARAT POLICE SURVEILLANCE GRID</span>
         </div>
@@ -37,7 +37,7 @@ export const SystemStatusBar: React.FC = () => {
       <div className="flex items-center gap-4">
         <button
           onClick={toggleAudio}
-          className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-1 text-slate-300 dark:text-slate-400 hover:text-white transition-colors"
           title={audioMuted ? 'Unmute alert audio' : 'Mute alert audio'}
         >
           {audioMuted ? <VolumeX className="w-3.5 h-3.5 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}

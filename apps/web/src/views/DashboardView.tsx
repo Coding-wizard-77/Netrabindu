@@ -3,7 +3,10 @@ import { StatCard } from '../components/common/StatCard';
 import { CommandMap } from '../components/gis/CommandMap';
 import { LiveEventStream } from '../components/anpr/LiveEventStream';
 import { AlertBanner } from '../components/alerts/AlertBanner';
-import { AdaptiveStateMatrix } from '../components/telemetry/AdaptiveStateMatrix';
+import { LiveRadarScanner } from '../components/dashboard/LiveRadarScanner';
+import { DepartmentDistributionChart } from '../components/dashboard/DepartmentDistributionChart';
+import { IncidentHotspotMatrix } from '../components/dashboard/IncidentHotspotMatrix';
+import { TacticalQuickActionBar } from '../components/dashboard/TacticalQuickActionBar';
 import { BandwidthSavingsChart } from '../components/telemetry/BandwidthSavingsChart';
 import { InferenceComputeChart } from '../components/telemetry/InferenceComputeChart';
 import { SentinelActivityGauge } from '../components/telemetry/SentinelActivityGauge';
@@ -11,7 +14,7 @@ import { camerasApi } from '../api/cameras';
 import { alertsApi } from '../api/alerts';
 import { healthApi } from '../api/health';
 import { Camera, Alert, SystemMetrics } from '../types';
-import { Camera as CameraIcon, AlertTriangle, Radio, Activity, Cpu, Shield, ArrowRight } from 'lucide-react';
+import { Camera as CameraIcon, AlertTriangle, Radio, Activity, Cpu, Shield, ArrowRight, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const DashboardView: React.FC = () => {
@@ -21,24 +24,25 @@ export const DashboardView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    async function loadDashboardData() {
-      try {
-        setLoading(true);
-        const [cams, alts, mets] = await Promise.allSettled([
-          camerasApi.getCameras(),
-          alertsApi.getAlerts({ limit: 5 }),
-          healthApi.getMetrics(),
-        ]);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [cams, alts, mets] = await Promise.allSettled([
+        camerasApi.getCameras(),
+        alertsApi.getAlerts({ limit: 5 }),
+        healthApi.getMetrics(),
+      ]);
 
-        if (cams.status === 'fulfilled') setCameras(cams.value);
-        if (alts.status === 'fulfilled') setAlerts(alts.value);
-        if (mets.status === 'fulfilled') setMetrics(mets.value);
-      } finally {
-        setLoading(false);
-      }
+      if (cams.status === 'fulfilled') setCameras(cams.value);
+      if (alts.status === 'fulfilled') setAlerts(alts.value);
+      if (mets.status === 'fulfilled') setMetrics(mets.value);
+    } finally {
+      setLoading(false);
     }
-    loadDashboardData();
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
   }, []);
 
   const onlineCount = cameras.filter((c) => c.status === 'ONLINE').length;
@@ -47,23 +51,33 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner / Heading */}
+      {/* Tactical Quick Action Bar */}
+      <TacticalQuickActionBar
+        onExportReport={() => navigate('/investigation')}
+        onRefreshGrid={fetchDashboardData}
+        onTriggerOnboarding={() => navigate('/cameras')}
+      />
+
+      {/* Top Banner & Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Shield className="w-5 h-5 text-cyan-400" />
-            Tactical Operations Command Center
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5 font-mono">
+            <span className="p-1.5 rounded-lg bg-cyan-600/20 text-cyan-500 border border-cyan-500/40">
+              <Shield className="w-5 h-5" />
+            </span>
+            TACTICAL COMMAND &amp; CONTROL OPERATIONS
           </h1>
-          <p className="text-xs text-slate-400 font-mono mt-0.5">
-            Real-time hybrid edge surveillance grid • Gujarat Police HQ
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-1">
+            26 Government Departments • Heterogeneous Edge-First CCTV Surveillance Grid
           </p>
         </div>
 
         <button
           onClick={() => navigate('/live')}
-          className="py-2 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-mono font-bold flex items-center gap-2 transition-colors shadow-lg shadow-cyan-950/50"
+          className="py-2.5 px-5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-mono font-bold flex items-center gap-2 transition-all shadow-lg shadow-cyan-950/50 hover:scale-[1.02] active:scale-[0.98]"
         >
-          <span>Launch Live Video Wall</span>
+          <Radio className="w-4 h-4 animate-pulse" />
+          <span>Launch Multi-Grid Video Wall</span>
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
@@ -97,19 +111,31 @@ export const DashboardView: React.FC = () => {
 
         <StatCard
           title="Adaptive Compute Savings"
-          value="~58.4%"
+          value="~64.2%"
           subtitle="WAN Bandwidth & GPU Reduction"
           icon={<Cpu className="w-5 h-5" />}
           variant="amber"
         />
       </div>
 
-      {/* Sentinel Activity & Real-time Alerts Ticker */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 space-y-3">
-          <SentinelActivityGauge triggerRatePerMin={metrics?.events_per_minute ? Math.floor(metrics.events_per_minute * 0.4) : 58} activeEscalations={cameras.filter(c => c.current_quality_state === 'Active' || c.current_quality_state === 'Critical').length || 4} />
-          
-          {/* Latest High-Priority Alert Banner */}
+      {/* Sentinel Radar Scanner & Hotspot Matrix Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <LiveRadarScanner />
+        </div>
+        <div>
+          <IncidentHotspotMatrix />
+        </div>
+      </div>
+
+      {/* 26 Departments Distribution & Always-On Sentinel Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DepartmentDistributionChart />
+        <div className="space-y-4">
+          <SentinelActivityGauge
+            triggerRatePerMin={metrics?.events_per_minute ? Math.floor(metrics.events_per_minute * 0.45) : 62}
+            activeEscalations={cameras.filter((c) => c.current_quality_state === 'Active' || c.current_quality_state === 'Critical').length || 4}
+          />
           {alerts.length > 0 && (
             <AlertBanner
               alert={alerts[0]}
@@ -117,54 +143,39 @@ export const DashboardView: React.FC = () => {
             />
           )}
         </div>
-
-        {/* Quick Regional Surveillance Status */}
-        <div className="p-4 bg-[#0f172a] rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between">
-          <div>
-            <span className="text-[10px] font-mono uppercase text-slate-400">Jurisdiction Summary</span>
-            <h4 className="text-sm font-bold text-white mt-1">Ahmedabad Command Zone 01</h4>
-            <p className="text-xs text-slate-400 mt-1">
-              Traffic Branch, CID Crime, &amp; Smart City Federation nodes reporting optimal health.
-            </p>
-          </div>
-
-          <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono">
-            <span className="text-slate-400">Edge Node Health:</span>
-            <span className="text-emerald-400 font-bold">100% OPERATIONAL</span>
-          </div>
-        </div>
       </div>
 
-      {/* Central GIS Map & Live Detections Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* GIS Command Map & Telemetry Efficiency Curves */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-cyan-500" />
               Regional Camera GIS Grid
             </h3>
-            <span className="text-[10px] font-mono text-cyan-400">
+            <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
               {cameras.length} Plotted Sources
             </span>
           </div>
           <CommandMap
             cameras={cameras}
             onOpenLiveStream={() => navigate('/live')}
-            className="h-96 w-full rounded-xl overflow-hidden border border-slate-800"
+            className="h-[360px] w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl"
           />
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-mono">
               Adaptive Telemetry &amp; Compute Efficiency
             </h3>
-            <span className="text-[10px] font-mono text-emerald-400">Live Telemetry</span>
+            <span className="text-[10px] font-mono text-emerald-500 font-bold">Measured Metrics</span>
           </div>
           <BandwidthSavingsChart />
         </div>
       </div>
 
-      {/* Live AI Detection Stream */}
+      {/* Live Intelligence Stream */}
       <LiveEventStream />
     </div>
   );

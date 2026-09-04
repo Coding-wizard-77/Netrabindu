@@ -36,7 +36,6 @@ export function DataTable<T extends Record<string, any>>({
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filter
   const filtered = data.filter((row) =>
     columns.some((col) => {
       const val = row[col.key];
@@ -44,7 +43,6 @@ export function DataTable<T extends Record<string, any>>({
     })
   );
 
-  // Sort
   const sorted = [...filtered].sort((a, b) => {
     if (!sortKey) return 0;
     const aVal = a[sortKey];
@@ -54,7 +52,6 @@ export function DataTable<T extends Record<string, any>>({
     return aVal < bVal ? 1 : -1;
   });
 
-  // Paginate
   const totalPages = Math.ceil(sorted.length / pageSize) || 1;
   const paginated = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
@@ -68,11 +65,11 @@ export function DataTable<T extends Record<string, any>>({
   };
 
   return (
-    <div className="w-full bg-[#0f172a]/90 border border-slate-800 rounded-xl overflow-hidden backdrop-blur-md">
+    <div className="w-full bg-white dark:bg-[#0f172a]/90 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm transition-colors">
       {/* Search Header */}
-      <div className="p-3 border-b border-slate-800 flex items-center justify-between gap-4">
+      <div className="p-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
             value={search}
@@ -81,18 +78,18 @@ export function DataTable<T extends Record<string, any>>({
               setCurrentPage(1);
             }}
             placeholder={searchPlaceholder}
-            className="w-full bg-slate-900/80 border border-slate-700/60 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
+            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-700/60 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-cyan-500 font-mono"
           />
         </div>
-        <span className="text-xs text-slate-400 font-mono">
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
           Showing {paginated.length} of {filtered.length} entries
         </span>
       </div>
 
       {/* Table Content */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-900/80 text-slate-400 uppercase tracking-wider font-mono border-b border-slate-800 text-[11px]">
+        <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
+          <thead className="bg-slate-100 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 uppercase tracking-wider font-mono border-b border-slate-200 dark:border-slate-800 text-[11px]">
             <tr>
               {columns.map((col) => (
                 <th
@@ -100,7 +97,7 @@ export function DataTable<T extends Record<string, any>>({
                   onClick={() => col.sortable && handleSort(col.key)}
                   className={clsx(
                     'px-4 py-3 select-none',
-                    col.sortable && 'cursor-pointer hover:text-cyan-400',
+                    col.sortable && 'cursor-pointer hover:text-cyan-600 dark:hover:text-cyan-400',
                     col.className
                   )}
                 >
@@ -112,7 +109,7 @@ export function DataTable<T extends Record<string, any>>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
             {isLoading ? (
               <tr>
                 <td colSpan={columns.length} className="px-4 py-12 text-center text-slate-500 font-mono">
@@ -131,7 +128,7 @@ export function DataTable<T extends Record<string, any>>({
                   key={keyExtractor(row)}
                   onClick={() => onRowClick && onRowClick(row)}
                   className={clsx(
-                    'hover:bg-slate-800/40 transition-colors',
+                    'hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors',
                     onRowClick && 'cursor-pointer'
                   )}
                 >
@@ -148,7 +145,7 @@ export function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Pagination Footer */}
-      <div className="p-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+      <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
         <span>
           Page {currentPage} of {totalPages}
         </span>
@@ -156,14 +153,14 @@ export function DataTable<T extends Record<string, any>>({
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="p-1 rounded bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-1 rounded bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="p-1 rounded bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-1 rounded bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 hover:bg-slate-200 dark:hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
