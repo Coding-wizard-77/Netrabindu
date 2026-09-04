@@ -7,8 +7,14 @@ import os
 import sys
 
 # Add workspace root and backend directory to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend')))
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+backend_dir = os.path.join(root_dir, 'backend')
+if backend_dir in sys.path:
+    sys.path.remove(backend_dir)
+if root_dir in sys.path:
+    sys.path.remove(root_dir)
+sys.path.insert(0, backend_dir)
+sys.path.insert(0, root_dir)
 
 from backend.database import get_db
 from backend.main import app
