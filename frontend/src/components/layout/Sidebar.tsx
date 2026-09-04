@@ -65,24 +65,24 @@ export const Sidebar: React.FC = () => {
   return (
     <aside
       className={clsx(
-        'bg-navy-950/95 dark:bg-navy-950/95 border-r border-navy-800 flex flex-col transition-all duration-300 z-40 relative backdrop-blur-xl select-none',
+        'bg-white dark:bg-navy-950/95 border-r border-slate-200 dark:border-navy-800 flex flex-col transition-all duration-300 z-40 relative backdrop-blur-xl select-none',
         sidebarOpen ? 'w-64' : 'w-20'
       )}
     >
       {/* Brand Header */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-navy-800/80">
+      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-200 dark:border-navy-800/80">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="relative h-10 w-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-emerald-500 p-0.5 flex items-center justify-center shrink-0 shadow-glow-cyan/20">
-            <div className="w-full h-full bg-navy-950 rounded-[10px] flex items-center justify-center">
-              <Shield className="w-5 h-5 text-cyan-400" />
+            <div className="w-full h-full bg-slate-50 dark:bg-navy-950 rounded-[10px] flex items-center justify-center">
+              <Shield className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
             </div>
             <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-400 animate-ping opacity-75" />
             <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-emerald-500" />
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden leading-tight">
-              <div className="text-sm font-black text-white tracking-wider font-mono">NETRABINDU</div>
-              <div className="text-[10px] font-mono font-semibold text-cyan-400 tracking-tight">
+              <div className="text-sm font-black text-slate-900 dark:text-white tracking-wider font-mono">NETRABINDU</div>
+              <div className="text-[10px] font-mono font-semibold text-cyan-600 dark:text-cyan-400 tracking-tight">
                 GUJARAT POLICE GRID
               </div>
             </div>
@@ -92,7 +92,7 @@ export const Sidebar: React.FC = () => {
         {/* Collapse Toggle */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-navy-850 transition-colors"
+          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-navy-850 transition-colors"
           title={sidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
         >
           {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -104,7 +104,7 @@ export const Sidebar: React.FC = () => {
         {navigationGroups.map((grp, gIdx) => (
           <div key={gIdx} className="space-y-1">
             {sidebarOpen && (
-              <div className="px-3 text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase mb-2">
+              <div className="px-3 text-[10px] font-mono font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-2">
                 {grp.group}
               </div>
             )}
@@ -118,18 +118,18 @@ export const Sidebar: React.FC = () => {
                     clsx(
                       'flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-mono font-medium transition-all group relative',
                       isActive
-                        ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/10 text-cyan-300 border border-cyan-500/40 shadow-glow-cyan/20 font-bold'
-                        : 'text-slate-400 hover:text-slate-100 hover:bg-navy-900/80 border border-transparent'
+                        ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 dark:border-cyan-500/40 font-bold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-navy-900/80 border border-transparent'
                     )
                   }
                   title={!sidebarOpen ? item.name : undefined}
                 >
-                  <Icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110 text-cyan-400/80 group-hover:text-cyan-400" />
+                  <Icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110 text-cyan-600 dark:text-cyan-400/80 group-hover:text-cyan-500" />
                   {sidebarOpen && (
                     <div className="flex-1 flex items-center justify-between truncate">
                       <span>{item.name}</span>
                       {item.badge && (
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-navy-800 text-cyan-400 border border-navy-700">
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-slate-100 text-cyan-700 border-slate-200 dark:bg-navy-800 dark:text-cyan-400 border dark:border-navy-700">
                           {item.badge}
                         </span>
                       )}
@@ -137,7 +137,7 @@ export const Sidebar: React.FC = () => {
                         <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
                       )}
                       {item.alertBadge && (
-                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse">
+                        <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/40 animate-pulse">
                           HOT
                         </span>
                       )}
@@ -152,14 +152,14 @@ export const Sidebar: React.FC = () => {
 
       {/* Footer System Status */}
       {sidebarOpen ? (
-        <div className="p-3 border-t border-navy-800 m-3 rounded-xl bg-navy-900/60 text-[11px] font-mono text-slate-400 border border-navy-800/80 space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold text-slate-200">
+        <div className="p-3 border-t border-slate-200 dark:border-navy-800 m-3 rounded-xl bg-slate-100/80 dark:bg-navy-900/60 text-[11px] font-mono text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-navy-800/80 space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-900 dark:text-slate-200">
             <span className="flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-cyan-400" /> Sentinel Engine
+              <Cpu className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" /> Sentinel Engine
             </span>
-            <span className="text-emerald-400 font-bold">OPTIMAL</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">OPTIMAL</span>
           </div>
-          <div className="w-full bg-navy-950 h-1.5 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-200 dark:bg-navy-950 h-1.5 rounded-full overflow-hidden">
             <div className="bg-gradient-to-r from-cyan-500 to-emerald-400 h-full w-[38%]" />
           </div>
           <div className="flex justify-between text-[10px] text-slate-500">
@@ -168,7 +168,7 @@ export const Sidebar: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="p-3 border-t border-navy-800 flex justify-center">
+        <div className="p-3 border-t border-slate-200 dark:border-navy-800 flex justify-center">
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-ping" />
         </div>
       )}

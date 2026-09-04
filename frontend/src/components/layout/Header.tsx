@@ -84,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-navy-800 bg-navy-950/90 px-4 backdrop-blur-md dark:border-navy-800 dark:bg-navy-950/95 light:bg-white light:border-slate-200">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur-md dark:border-navy-800 dark:bg-navy-950/95 transition-colors">
       {/* Left: Branding & DEFCON Status */}
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-3">
@@ -97,24 +97,24 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-mono text-base font-black tracking-wider text-slate-100 light:text-slate-900 uppercase">
+              <span className="font-mono text-base font-black tracking-wider text-slate-900 dark:text-slate-100 uppercase">
                 NETRABINDU
               </span>
-              <span className="rounded bg-navy-800 px-1.5 py-0.5 text-[10px] font-bold font-mono text-accent-cyan border border-navy-700">
+              <span className="rounded bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 text-[10px] font-bold font-mono text-cyan-600 dark:text-accent-cyan border border-slate-300 dark:border-navy-700">
                 v2.4 SEC-SECURED
               </span>
             </div>
-            <p className="text-[10px] font-semibold text-slate-400 tracking-tight">
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-tight">
               GUJARAT POLICE STATE SURVEILLANCE GRID
             </p>
           </div>
         </div>
 
         {/* Threat Level Badge */}
-        <div className="hidden lg:flex items-center space-x-2 rounded-lg border border-navy-700 bg-navy-900/80 px-2.5 py-1 text-xs">
-          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span className="font-mono font-bold text-slate-300">DEFCON 3</span>
-          <span className="text-[10px] text-slate-400 border-l border-navy-700 pl-2">ACTIVE SENTINEL</span>
+        <div className="hidden lg:flex items-center space-x-2 rounded-lg border border-slate-200 bg-slate-100/80 dark:border-navy-700 dark:bg-navy-900/80 px-2.5 py-1 text-xs">
+          <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+          <span className="font-mono font-bold text-slate-800 dark:text-slate-300">DEFCON 3</span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 border-l border-slate-300 dark:border-navy-700 pl-2">ACTIVE SENTINEL</span>
         </div>
       </div>
 
@@ -127,9 +127,9 @@ export const Header: React.FC<HeaderProps> = ({
             value={quickPlate}
             onChange={(e) => setQuickPlate(e.target.value)}
             placeholder="Quick Search Plate (e.g. GJ01AB1234)..."
-            className="w-full rounded-lg border border-navy-700 bg-navy-900/90 py-1.5 pl-9 pr-14 text-xs font-mono text-slate-100 placeholder-slate-500 focus:border-accent-blue focus:outline-none focus:ring-1 focus:ring-accent-blue transition-colors uppercase"
+            className="w-full rounded-lg border border-slate-300 bg-slate-50 dark:border-navy-700 dark:bg-navy-900/90 py-1.5 pl-9 pr-14 text-xs font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-accent-blue focus:outline-none focus:ring-1 focus:ring-accent-blue transition-colors uppercase"
           />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-navy-700 bg-navy-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-400">
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-slate-300 bg-slate-200 dark:border-navy-700 dark:bg-navy-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-600 dark:text-slate-400">
             ENTER
           </span>
         </div>
@@ -160,30 +160,30 @@ export const Header: React.FC<HeaderProps> = ({
               onOpenSitRep();
             }}
             title="Generate Daily Police SitRep (Hotkey: S)"
-            className="hidden sm:flex items-center space-x-1.5 rounded-lg border border-navy-700 bg-navy-800/80 px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:bg-navy-700 hover:text-slate-100 transition-colors shadow-sm"
+            className="hidden sm:flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-slate-100 dark:border-navy-700 dark:bg-navy-800/80 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700 hover:text-slate-900 dark:hover:text-slate-100 transition-colors shadow-sm"
           >
             <FileText className="h-3.5 w-3.5 text-accent-blue" />
             <span>SITREP</span>
-            <kbd className="hidden md:inline rounded bg-navy-900 px-1 py-0.2 text-[9px] font-mono border border-navy-700">S</kbd>
+            <kbd className="hidden md:inline rounded bg-slate-200 dark:bg-navy-900 px-1 py-0.2 text-[9px] font-mono border border-slate-300 dark:border-navy-700">S</kbd>
           </button>
         )}
 
         {/* Live IST Clock */}
-        <div className="hidden xl:flex items-center space-x-2 rounded-lg border border-navy-700 bg-navy-900/90 px-3 py-1 text-right">
-          <Clock className="h-4 w-4 text-accent-cyan animate-pulse" />
+        <div className="hidden xl:flex items-center space-x-2 rounded-lg border border-slate-200 bg-slate-100 dark:border-navy-700 dark:bg-navy-900/90 px-3 py-1 text-right">
+          <Clock className="h-4 w-4 text-cyan-600 dark:text-accent-cyan animate-pulse" />
           <div className="leading-tight">
-            <div className="font-mono text-xs font-bold text-slate-100 tracking-wider">
+            <div className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 tracking-wider">
               {timeStr || '12:00:00 IST'}
             </div>
-            <div className="text-[10px] text-slate-400 font-medium">{dateStr}</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{dateStr}</div>
           </div>
         </div>
 
         {/* Alert Counter Indicator */}
-        <div className="flex items-center space-x-1.5 rounded-lg border border-navy-700 bg-navy-900/80 px-2.5 py-1.5 text-xs">
-          <AlertTriangle className={`h-4 w-4 ${activeAlertCount > 0 ? 'text-red-400 animate-bounce' : 'text-slate-500'}`} />
-          <span className="font-mono font-bold text-slate-200">{activeAlertCount}</span>
-          <span className="hidden md:inline text-[10px] text-slate-400 uppercase">Alerts</span>
+        <div className="flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-slate-100 dark:border-navy-700 dark:bg-navy-900/80 px-2.5 py-1.5 text-xs">
+          <AlertTriangle className={`h-4 w-4 ${activeAlertCount > 0 ? 'text-red-500 animate-bounce' : 'text-slate-400'}`} />
+          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{activeAlertCount}</span>
+          <span className="hidden md:inline text-[10px] text-slate-500 dark:text-slate-400 uppercase">Alerts</span>
         </div>
 
         {/* Audio Mute Toggle */}
@@ -193,7 +193,7 @@ export const Header: React.FC<HeaderProps> = ({
           className={`rounded-lg border p-2 text-xs transition-colors ${
             isMuted
               ? 'border-red-800/60 bg-red-950/40 text-red-400 hover:bg-red-900/50'
-              : 'border-navy-700 bg-navy-800 text-accent-cyan hover:bg-navy-700'
+              : 'border-slate-200 bg-slate-100 text-cyan-700 hover:bg-slate-200 dark:border-navy-700 dark:bg-navy-800 dark:text-accent-cyan dark:hover:bg-navy-700'
           }`}
         >
           {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -206,7 +206,7 @@ export const Header: React.FC<HeaderProps> = ({
             onOpenShortcuts();
           }}
           title="Tactical Keyboard Shortcuts HUD (Hotkey: ?)"
-          className="rounded-lg border border-navy-700 bg-navy-800 p-2 text-slate-300 hover:bg-navy-700 hover:text-slate-100 transition-colors"
+          className="rounded-lg border border-slate-200 bg-slate-100 p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:border-navy-700 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700 dark:hover:text-slate-100 transition-colors"
         >
           <Keyboard className="h-4 w-4" />
         </button>
@@ -218,9 +218,9 @@ export const Header: React.FC<HeaderProps> = ({
             onToggleDarkMode();
           }}
           title="Toggle Dark/Light Tactical Mode (Hotkey: T)"
-          className="rounded-lg border border-navy-700 bg-navy-800 p-2 text-slate-300 hover:bg-navy-700 hover:text-slate-100 transition-colors"
+          className="rounded-lg border border-slate-200 bg-slate-100 p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:border-navy-700 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700 dark:hover:text-slate-100 transition-colors shadow-sm"
         >
-          {darkMode ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-400" />}
+          {darkMode ? <Sun className="h-4 w-4 text-amber-500 animate-spin-slow" /> : <Moon className="h-4 w-4 text-indigo-600" />}
         </button>
       </div>
     </header>

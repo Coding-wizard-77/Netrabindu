@@ -45,13 +45,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [isNakabandiOpen, setIsNakabandiOpen] = useState<boolean>(false);
   const [isSitRepOpen, setIsSitRepOpen] = useState<boolean>(false);
 
-  // Apply dark mode class to root HTML element
+  // Apply dark/light mode class to root HTML element
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
       localStorage.setItem('netrabindu_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
       localStorage.setItem('netrabindu_theme', 'light');
     }
   }, [darkMode]);
@@ -198,7 +200,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   }, [handleNavigate, toggleDarkMode]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-navy-950 font-sans text-slate-100 antialiased dark:bg-navy-950 light:bg-slate-50 light:text-slate-900">
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-100 text-slate-900 dark:bg-navy-950 dark:text-slate-100 font-sans antialiased transition-colors duration-200">
       {/* Tactical Sidebar */}
       <Sidebar />
 
@@ -214,7 +216,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           onSearchPlate={handleSearch}
         />
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-navy-900/40 relative">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100/70 dark:bg-navy-900/40 relative transition-colors duration-200">
           {children || <Outlet />}
         </main>
 
