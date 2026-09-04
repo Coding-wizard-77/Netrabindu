@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netrabindu"
+version = "1.0.0"
+description = "Registry-Anchored, Edge-First, Federation-Routed CCTV Intelligence Platform"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Gujarat Police Hackathon Team - Netrabindu" }
+]
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy>=2.0.36",
+    "alembic>=1.14.0",
+    "redis>=5.2.0",
+    "pyjwt[crypto]>=2.10.0",
+    "bcrypt>=4.2.0",
+    "prometheus-client>=0.21.0",
+    "httpx>=0.28.0",
+    "websockets>=13.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-mock>=3.14.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+asyncio_mode = "auto"

@@ -1,0 +1,23 @@
+# MediaMTX Configuration for Netrabindu Stream Gateway
+
+api: yes
+apiAddress: :8554
+
+rtsp: yes
+rtspAddress: :8554
+protocols: [tcp]
+
+webrtc: yes
+webrtcAddress: :8889
+webrtcAllowOrigins: ['*']
+
+hls: yes
+hlsAddress: :8888
+hlsAllowOrigins: ['*']
+hlsSegmentCount: 3
+hlsSegmentDuration: 1s
+
+paths:
+  all:
+    readUser: ""
+    readPass: ""
