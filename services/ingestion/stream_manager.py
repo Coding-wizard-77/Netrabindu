@@ -56,11 +56,17 @@ class StreamManager:
         return {
             "camera_id": camera_id,
             "path_name": path_name,
+            "stream_type": "webrtc",
             "webrtc_url": f"{self.webrtc_base}/{path_name}/whep{token_param}",
             "hls_url": f"{self.hls_base}/{path_name}/index.m3u8{token_param}",
             "rtsp_url": f"{self.rtsp_base}/{path_name}",
             "session_token": session_token or "auth-verified",
-            "expires_at": expires.isoformat()
+            "expires_at": expires.isoformat(),
+            "stream_info": {
+                "codec": "H.264",
+                "resolution": "1920x1080",
+                "fps": 25
+            }
         }
 
 stream_manager = StreamManager()

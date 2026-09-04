@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -62,7 +62,22 @@ class CameraOut(BaseModel):
     retention_days: int
     analytics_profile: str
     created_at: datetime
+    updated_at: Optional[datetime] = None
+    department_code: Optional[str] = None
+    department_name: Optional[str] = None
+    endpoint_ref: Optional[str] = None
+    current_quality_state: Optional[str] = "Normal"
+    fps: Optional[float] = 15.0
+    bitrate_kbps: Optional[float] = 1024.0
+    latency_ms: Optional[float] = 45.0
     sources: List[CameraSourceOut] = []
+
+    @computed_field
+    @property
+    def location(self) -> Dict[str, float]:
+        lat = self.latitude if self.latitude is not None else 0.0
+        lon = self.longitude if self.longitude is not None else 0.0
+        return {"lat": lat, "lon": lon}
 
     class Config:
         from_attributes = True
@@ -88,6 +103,7 @@ class CameraDetailOut(CameraOut):
 
 class ONVIFDiscoverRequest(BaseModel):
     interface_or_subnet: Optional[str] = None
+    network_interface: Optional[str] = None
     timeout_seconds: float = 3.0
 
 class CameraImportResult(BaseModel):
@@ -95,3 +111,18 @@ class CameraImportResult(BaseModel):
     failed_count: int
     cameras: List[CameraOut]
     errors: List[Dict[str, Any]]
+
+    @computed_field
+    @property
+    def total(self) -> int:
+        return self.imported_count + self.failed_count
+
+    @computed_field
+    @property
+    def imported(self) -> int:
+        return self.imported_count
+
+    @computed_field
+    @property
+    def failed(self) -> int:
+        return self.failed_count

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from sqlalchemy.orm import Session
 from apps.api.database import get_db
 from apps.api.dependencies import get_current_user, require_role, verify_department_scope
@@ -25,6 +25,9 @@ class DetectionEventOut(BaseModel):
     event_id: str
     event_type: str
     camera_id: str
+    camera_name: Optional[str] = None
+    camera_code: Optional[str] = None
+    department_name: Optional[str] = None
     occurred_at: datetime
     confidence: float
     latitude: float
@@ -32,6 +35,18 @@ class DetectionEventOut(BaseModel):
     identifier: Dict[str, Any]
     evidence_ref: Dict[str, Any]
     pipeline: Dict[str, Any]
+
+    @computed_field
+    @property
+    def location(self) -> Dict[str, float]:
+        lat = self.latitude if self.latitude is not None else 0.0
+        lon = self.longitude if self.longitude is not None else 0.0
+        return {"lat": lat, "lon": lon}
+
+    @computed_field
+    @property
+    def evidence(self) -> Dict[str, Any]:
+        return self.evidence_ref or {}
 
     class Config:
         from_attributes = True

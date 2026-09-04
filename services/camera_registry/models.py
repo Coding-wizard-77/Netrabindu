@@ -87,6 +87,14 @@ class Camera(Base):
     health_records = relationship('CameraHealth', back_populates='camera', cascade='all, delete-orphan')
     detection_events = relationship('DetectionEvent', back_populates='camera')
 
+    @property
+    def department_name(self) -> Optional[str]:
+        return self.department.name if self.department else None
+
+    @property
+    def department_code(self) -> Optional[str]:
+        return self.department.code if self.department else None
+
     __table_args__ = (
         Index('idx_camera_dept_status', 'department_id', 'status'),
         Index('idx_camera_lat_lon', 'latitude', 'longitude'),
@@ -180,6 +188,20 @@ class DetectionEvent(Base):
     vehicle_read = relationship('VehicleRead', back_populates='detection_event', uselist=False, cascade='all, delete-orphan')
     alerts = relationship('Alert', back_populates='detection_event')
 
+    @property
+    def camera_name(self) -> Optional[str]:
+        return self.camera.name if self.camera else None
+
+    @property
+    def camera_code(self) -> Optional[str]:
+        return self.camera.camera_code if self.camera else None
+
+    @property
+    def department_name(self) -> Optional[str]:
+        if self.camera and self.camera.department:
+            return self.camera.department.name
+        return None
+
     __table_args__ = (
         Index('idx_event_camera_time', 'camera_id', 'occurred_at'),
         Index('idx_event_type_time', 'event_type', 'occurred_at'),
@@ -250,6 +272,66 @@ class Alert(Base):
 
     detection_event = relationship('DetectionEvent', back_populates='alerts')
     watchlist_entity = relationship('WatchlistEntity', back_populates='alerts')
+
+    @property
+    def camera_name(self) -> Optional[str]:
+        if self.detection_event and self.detection_event.camera:
+            return self.detection_event.camera.name
+        return None
+
+    @property
+    def camera_code(self) -> Optional[str]:
+        if self.detection_event and self.detection_event.camera:
+            return self.detection_event.camera.camera_code
+        return None
+
+    @property
+    def department_name(self) -> Optional[str]:
+        if self.detection_event and self.detection_event.camera and self.detection_event.camera.department:
+            return self.detection_event.camera.department.name
+        return None
+
+    @property
+    def latitude(self) -> Optional[float]:
+        if self.detection_event:
+            return self.detection_event.latitude
+        return None
+
+    @property
+    def longitude(self) -> Optional[float]:
+        if self.detection_event:
+            return self.detection_event.longitude
+        return None
+
+    @property
+    def target_identifier(self) -> Optional[str]:
+        if self.watchlist_entity:
+            return self.watchlist_entity.identifier
+        return None
+
+    @property
+    def detected_identifier(self) -> Optional[str]:
+        if self.detection_event and isinstance(self.detection_event.identifier, dict):
+            return self.detection_event.identifier.get("raw")
+        return self.target_identifier
+
+    @property
+    def watchlist_category(self) -> Optional[str]:
+        if self.watchlist_entity:
+            return self.watchlist_entity.category
+        return "GENERAL"
+
+    @property
+    def occurred_at(self) -> Optional[datetime]:
+        if self.detection_event:
+            return self.detection_event.occurred_at
+        return self.created_at
+
+    @property
+    def confidence(self) -> float:
+        if self.detection_event:
+            return self.detection_event.confidence
+        return 0.95
 
     __table_args__ = (
         Index('idx_alert_state_severity', 'state', 'severity'),

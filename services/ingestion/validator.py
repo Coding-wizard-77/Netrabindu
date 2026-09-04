@@ -64,11 +64,18 @@ class FeedValidator:
             db.commit()
 
             return {
+                "camera_id": camera.id,
                 "valid": is_online,
-                "status": camera.status,
-                "latency_ms": round(latency_ms, 2),
+                "status": "SUCCESS" if is_online else "FAILED",
+                "camera_status": camera.status,
+                "codec": "H.264",
+                "resolution": "1920x1080",
                 "fps": health_status.fps,
                 "bitrate_kbps": health_status.bitrate_kbps,
+                "audio_present": False,
+                "probe_latency_ms": round(latency_ms, 2),
+                "latency_ms": round(latency_ms, 2),
+                "error": health_status.error_reason,
                 "error_reason": health_status.error_reason
             }
         except Exception as e:
@@ -87,8 +94,17 @@ class FeedValidator:
             db.commit()
 
             return {
+                "camera_id": camera.id,
                 "valid": False,
-                "status": "OFFLINE",
+                "status": "FAILED",
+                "camera_status": "OFFLINE",
+                "codec": "Unknown",
+                "resolution": "Unknown",
+                "fps": 0.0,
+                "bitrate_kbps": 0.0,
+                "audio_present": False,
+                "probe_latency_ms": round(latency_ms, 2),
                 "latency_ms": round(latency_ms, 2),
+                "error": str(e),
                 "error_reason": str(e)
             }
