@@ -20,12 +20,12 @@ const mockChartData = [
 
 export const BandwidthSavingsChart: React.FC = () => {
   return (
-    <div className="p-4 bg-[#0f172a] rounded-xl border border-slate-800 space-y-2">
+    <div className="p-4 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-300 font-mono">
           WAN Bandwidth Efficiency (Unmanaged vs Adaptive MB/s)
         </h4>
-        <span className="text-[10px] font-mono text-emerald-400 font-bold">~64% WAN Bandwidth Saved</span>
+        <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">~64% WAN Bandwidth Saved</span>
       </div>
 
       <div className="h-48 w-full">

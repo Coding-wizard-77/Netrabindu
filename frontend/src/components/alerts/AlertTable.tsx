@@ -40,7 +40,7 @@ export const AlertTable: React.FC<AlertTableProps> = ({ alerts, onSelectAlert, i
       header: 'Location / Camera',
       render: (a) => (
         <div>
-          <div className="font-semibold text-slate-200">{a.camera_name}</div>
+          <div className="font-semibold text-slate-800 dark:text-slate-200">{a.camera_name}</div>
           <div className="text-[10px] text-slate-500">{a.department_name}</div>
         </div>
       ),

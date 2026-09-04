@@ -32,14 +32,15 @@ export const Button: React.FC<ButtonProps> = ({
     primary:
       'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-950/50 border border-cyan-400/30 focus:ring-cyan-500',
     secondary:
-      'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 focus:ring-slate-500',
+      'bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 dark:border-slate-700 focus:ring-slate-500',
     tactical:
-      'bg-emerald-600/90 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 border border-emerald-400/30 focus:ring-emerald-500',
+      'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/50 border border-emerald-400/30 focus:ring-emerald-500',
     danger:
       'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950/50 border border-rose-400/30 focus:ring-rose-500',
-    ghost: 'bg-transparent hover:bg-slate-800/60 text-slate-300 focus:ring-slate-600',
+    ghost:
+      'bg-transparent hover:bg-slate-200 text-slate-700 dark:hover:bg-slate-800/60 dark:text-slate-300 focus:ring-slate-600',
     outline:
-      'bg-transparent hover:bg-slate-800 text-slate-200 border border-slate-700 focus:ring-slate-600',
+      'bg-transparent hover:bg-slate-100 text-slate-700 border border-slate-300 dark:hover:bg-slate-800 dark:text-slate-200 dark:border-slate-700 focus:ring-slate-600',
   };
 
   return (

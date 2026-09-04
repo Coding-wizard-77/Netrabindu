@@ -40,13 +40,13 @@ export const LiveEventStream: React.FC<LiveEventStreamProps> = ({
   return (
     <div className="space-y-3">
       {/* Stream Controls */}
-      <div className="flex items-center justify-between p-3 bg-slate-900/60 rounded-xl border border-slate-800">
+      <div className="flex items-center justify-between p-3 bg-white/90 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-2">
-          <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
-          <span className="text-xs font-bold font-mono text-slate-200 uppercase tracking-wider">
+          <Radio className="w-4 h-4 text-cyan-500 dark:text-cyan-400 animate-pulse" />
+          <span className="text-xs font-bold font-mono text-slate-800 dark:text-slate-200 uppercase tracking-wider">
             Live Intelligence Stream
           </span>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
             {events.length} Events
           </span>
         </div>
@@ -55,7 +55,7 @@ export const LiveEventStream: React.FC<LiveEventStreamProps> = ({
           <Button
             size="sm"
             variant="ghost"
-            icon={isPaused ? <Play className="w-3.5 h-3.5 text-emerald-400" /> : <Pause className="w-3.5 h-3.5 text-amber-400" />}
+            icon={isPaused ? <Play className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" /> : <Pause className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />}
             onClick={() => setIsPaused(!isPaused)}
           >
             {isPaused ? 'Resume' : 'Pause'}
@@ -73,7 +73,7 @@ export const LiveEventStream: React.FC<LiveEventStreamProps> = ({
 
       {/* Grid of Detection Cards */}
       {events.length === 0 ? (
-        <div className="p-12 text-center text-xs font-mono text-slate-500 bg-slate-900/20 rounded-xl border border-dashed border-slate-800">
+        <div className="p-12 text-center text-xs font-mono text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/20 rounded-xl border border-dashed border-slate-300 dark:border-slate-800">
           Awaiting real-time detections from Edge AI pipeline...
         </div>
       ) : (

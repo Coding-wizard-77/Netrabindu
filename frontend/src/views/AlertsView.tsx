@@ -64,19 +64,19 @@ export const AlertsView: React.FC = () => {
               <Clock className="w-3.5 h-3.5 text-cyan-400" /> Avg Dispatch SLA: &lt; 3 mins
             </span>
           </div>
-          <h1 className="text-xl font-black tracking-tight text-white font-mono flex items-center gap-2.5">
+          <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white font-mono flex items-center gap-2.5">
             <ShieldAlert className="w-6 h-6 text-rose-500 animate-pulse" />
             Watchlist Alerts &amp; Incident Intercept Matrix
           </h1>
-          <p className="text-xs text-slate-300 font-mono">
+          <p className="text-xs text-slate-600 dark:text-slate-300 font-mono">
             Automated hotlist plate detection &bull; Immediate PCR Intercept Vectoring &bull; Statutory Audit Log
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-600/40 text-center font-mono">
-            <div className="text-xl font-black text-rose-400">{criticalCount}</div>
-            <div className="text-[10px] text-slate-400 uppercase font-bold">Critical Alerts</div>
+          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-600/40 text-center font-mono">
+            <div className="text-xl font-black text-rose-600 dark:text-rose-400">{criticalCount}</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold">Critical Alerts</div>
           </div>
           <Button variant="secondary" size="sm" icon={<RefreshCw className="w-3.5 h-3.5" />} onClick={fetchAlerts} loading={loading}>
             Refresh Queue
@@ -85,8 +85,8 @@ export const AlertsView: React.FC = () => {
       </div>
 
       {/* Filters Bar */}
-      <div className="flex flex-wrap items-center gap-3 p-3.5 glass-panel rounded-2xl border border-navy-700 text-xs font-mono">
-        <span className="text-slate-400 font-bold uppercase text-[11px]">Workflow State:</span>
+      <div className="flex flex-wrap items-center gap-3 p-3.5 glass-panel rounded-2xl border border-slate-200 dark:border-navy-700 text-xs font-mono">
+        <span className="text-slate-600 dark:text-slate-400 font-bold uppercase text-[11px]">Workflow State:</span>
         {['ALL', 'NEW', 'ACKNOWLEDGED', 'DISPATCHED', 'RESOLVED'].map((st) => (
           <button
             key={st}
@@ -94,16 +94,16 @@ export const AlertsView: React.FC = () => {
             className={`px-3 py-1 rounded-lg font-bold transition-colors ${
               stateFilter === st
                 ? 'bg-cyan-600 text-white shadow-glow-cyan'
-                : 'bg-navy-900 text-slate-400 hover:text-white border border-navy-800'
+                : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-navy-800'
             }`}
           >
             {st}
           </button>
         ))}
 
-        <div className="h-4 w-[1px] bg-navy-800 mx-2 hidden sm:block" />
+        <div className="h-4 w-[1px] bg-slate-200 dark:bg-navy-800 mx-2 hidden sm:block" />
 
-        <span className="text-slate-400 font-bold uppercase text-[11px]">Severity:</span>
+        <span className="text-slate-600 dark:text-slate-400 font-bold uppercase text-[11px]">Severity:</span>
         {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM'].map((sev) => (
           <button
             key={sev}
@@ -111,7 +111,7 @@ export const AlertsView: React.FC = () => {
             className={`px-3 py-1 rounded-lg font-bold transition-colors ${
               severityFilter === sev
                 ? 'bg-rose-600 text-white shadow-glow-red'
-                : 'bg-navy-900 text-slate-400 hover:text-white border border-navy-800'
+                : 'bg-slate-100 dark:bg-navy-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-navy-800'
             }`}
           >
             {sev}

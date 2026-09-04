@@ -8,6 +8,8 @@ import { NakabandiLockdownModal } from '../police/NakabandiLockdownModal';
 import { DailyPoliceSitRepModal } from '../police/DailyPoliceSitRepModal';
 import { tacticalAudio } from '../../utils/audio';
 
+import { useUIStore } from '../../store/useUIStore';
+
 export type ViewType =
   | 'dashboard'
   | 'live-matrix'
@@ -37,30 +39,27 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [darkMode, setDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('netrabindu_theme');
-    return saved !== 'light';
-  });
+  const { theme, toggleTheme, setTheme } = useUIStore();
+  const darkMode = theme === 'dark';
+
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
   const [isNakabandiOpen, setIsNakabandiOpen] = useState<boolean>(false);
   const [isSitRepOpen, setIsSitRepOpen] = useState<boolean>(false);
 
   // Apply dark/light mode class to root HTML element
   useEffect(() => {
-    if (darkMode) {
+    if (theme === 'dark') {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
-      localStorage.setItem('netrabindu_theme', 'dark');
     } else {
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light');
-      localStorage.setItem('netrabindu_theme', 'light');
     }
-  }, [darkMode]);
+  }, [theme]);
 
   const toggleDarkMode = useCallback(() => {
-    setDarkMode((prev) => !prev);
-  }, []);
+    toggleTheme();
+  }, [toggleTheme]);
 
   const handleNavigate = useCallback(
     (view: ViewType) => {

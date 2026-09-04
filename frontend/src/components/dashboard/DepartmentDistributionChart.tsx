@@ -11,22 +11,22 @@ export const DepartmentDistributionChart: React.FC = () => {
   ];
 
   return (
-    <div className="glass-panel rounded-2xl p-5 border border-navy-700/80 shadow-2xl space-y-4">
-      <div className="flex items-center justify-between border-b border-navy-800 pb-3">
+    <div className="glass-panel rounded-2xl p-5 border border-slate-200 dark:border-navy-700/80 shadow-2xl space-y-4">
+      <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-blue-500/15 text-blue-400 border border-blue-500/30">
+          <div className="p-2 rounded-xl bg-blue-500/15 text-blue-500 dark:text-blue-400 border border-blue-500/30">
             <Layers className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-black text-white font-mono tracking-wider uppercase">
+            <h3 className="text-sm font-black text-slate-900 dark:text-white font-mono tracking-wider uppercase">
               26 Department CCTV Network Distribution
             </h3>
-            <p className="text-[10px] font-mono text-slate-400">
+            <p className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
               State-wide Unified Inter-Department Surveillance Grid
             </p>
           </div>
         </div>
-        <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono text-[10px] font-bold border border-blue-500/40">
+        <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300 font-mono text-[10px] font-bold border border-blue-500/40">
           12,480 TOTAL CAMS
         </span>
       </div>
@@ -35,12 +35,12 @@ export const DepartmentDistributionChart: React.FC = () => {
         {departments.map((d, i) => (
           <div key={i} className="space-y-1 font-mono text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-slate-300 font-medium">{d.name}</span>
-              <span className="text-slate-400">
-                <strong className="text-white font-bold">{d.cams.toLocaleString()}</strong> ({d.pct}%)
+              <span className="text-slate-700 dark:text-slate-300 font-medium">{d.name}</span>
+              <span className="text-slate-500 dark:text-slate-400">
+                <strong className="text-slate-900 dark:text-white font-bold">{d.cams.toLocaleString()}</strong> ({d.pct}%)
               </span>
             </div>
-            <div className="w-full bg-navy-950 h-2 rounded-full overflow-hidden border border-navy-800">
+            <div className="w-full bg-slate-200 dark:bg-navy-950 h-2 rounded-full overflow-hidden border border-slate-300 dark:border-navy-800">
               <div
                 className={`h-full bg-gradient-to-r ${d.color} rounded-full transition-all duration-500`}
                 style={{ width: `${d.pct}%` }}

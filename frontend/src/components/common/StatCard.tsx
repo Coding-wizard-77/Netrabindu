@@ -84,10 +84,10 @@ export const StatCard: React.FC<StatCardProps> = ({
 
       <div className="flex items-start justify-between">
         <div className="space-y-1.5 flex-1 pr-2">
-          <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-400">
+          <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             {title}
           </span>
-          <div className="text-2xl lg:text-3xl font-mono font-black tracking-tight text-white flex items-baseline gap-2">
+          <div className="text-2xl lg:text-3xl font-mono font-black tracking-tight text-slate-900 dark:text-white flex items-baseline gap-2">
             {value}
           </div>
         </div>
@@ -105,9 +105,9 @@ export const StatCard: React.FC<StatCardProps> = ({
 
       {/* Subtitle & Trend */}
       {(subtitle || trend) && (
-        <div className="mt-3.5 pt-3 border-t border-navy-800/80 flex items-center justify-between text-xs font-mono">
+        <div className="mt-3.5 pt-3 border-t border-slate-200 dark:border-navy-800/80 flex items-center justify-between text-xs font-mono">
           {subtitle && (
-            <span className="text-[11px] text-slate-400 truncate max-w-[200px]" title={subtitle}>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px]" title={subtitle}>
               {subtitle}
             </span>
           )}

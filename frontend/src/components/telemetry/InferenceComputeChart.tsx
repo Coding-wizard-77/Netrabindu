@@ -18,12 +18,12 @@ const computeData = [
 
 export const InferenceComputeChart: React.FC = () => {
   return (
-    <div className="p-4 bg-[#0f172a] rounded-xl border border-slate-800 space-y-2">
+    <div className="p-4 bg-white dark:bg-[#0f172a] rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 font-mono">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-300 font-mono">
           Cascaded Inference Compute Escalation
         </h4>
-        <span className="text-[10px] font-mono text-cyan-400 font-bold">Cascaded Task Models</span>
+        <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">Cascaded Task Models</span>
       </div>
 
       <div className="h-48 w-full">

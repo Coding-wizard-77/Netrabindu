@@ -77,10 +77,10 @@ export const DashboardView: React.FC = () => {
               </span>
             </div>
             
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white font-mono uppercase">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white font-mono uppercase">
               Integrated Police Command &amp; Control Operations Center
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 font-mono max-w-3xl">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 font-mono max-w-3xl">
               Unified real-time tactical surveillance across 26 Departmental CCTV networks &amp; 33 Police Districts in Gujarat State.
             </p>
           </div>
@@ -167,29 +167,29 @@ export const DashboardView: React.FC = () => {
 
       {/* GIS Command Map & Telemetry Efficiency Curves */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-panel rounded-2xl p-5 border border-navy-700/80 shadow-2xl space-y-3">
-          <div className="flex items-center justify-between border-b border-navy-800 pb-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 font-mono flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-cyan-400" />
+        <div className="glass-panel rounded-2xl p-5 border border-slate-200 dark:border-navy-700/80 shadow-2xl space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 font-mono flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />
               Regional Camera GIS Surveillance Grid
             </h3>
-            <span className="text-[10px] font-mono text-cyan-400 font-bold">
+            <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold">
               {cameras.length || 12} Plotted Nodes
             </span>
           </div>
           <CommandMap
             cameras={cameras}
             onOpenLiveStream={() => navigate('/live')}
-            className="h-[340px] w-full rounded-xl overflow-hidden border border-navy-800 shadow-xl"
+            className="h-[340px] w-full rounded-xl overflow-hidden border border-slate-200 dark:border-navy-800 shadow-xl"
           />
         </div>
 
-        <div className="glass-panel rounded-2xl p-5 border border-navy-700/80 shadow-2xl space-y-3">
-          <div className="flex items-center justify-between border-b border-navy-800 pb-2">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200 font-mono">
+        <div className="glass-panel rounded-2xl p-5 border border-slate-200 dark:border-navy-700/80 shadow-2xl space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-navy-800 pb-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 font-mono">
               Adaptive Telemetry &amp; Compute Efficiency
             </h3>
-            <span className="text-[10px] font-mono text-emerald-400 font-bold">Measured Real-time</span>
+            <span className="text-[10px] font-mono text-emerald-500 dark:text-emerald-400 font-bold">Measured Real-time</span>
           </div>
           <BandwidthSavingsChart />
         </div>
