@@ -3,6 +3,9 @@ import pytest
 from models.ocr.paddle_ocr import PaddleOCRAdapter
 from models.tracking.bytetrack import ByteTrackTracker
 from services.adaptive_edge.engine import QualityState, AdaptiveController
+from services.adaptive_edge.sentinel import ActivitySentinel
+from services.adaptive_edge.telemetry import TelemetryRecorder
+from services.analytics.events import build_edge_event, EvidenceRef, PipelineContext
 
 
 def test_quality_state_machine_tracks_idle_to_critical():
@@ -57,3 +60,36 @@ def test_indian_plate_normalization_and_tracker_dedupe():
     tracks = tracker.update([(1, 0.99, 0, 0, 100, 100), (1, 0.97, 10, 10, 110, 110)])
     assert len(tracks) == 2
     assert len(tracker.active_tracks()) == 2
+
+
+def test_sentinel_and_event_contract_are_consistent():
+    sentinel = ActivitySentinel()
+    result = sentinel.evaluate(motion_score=0.8, scene_entropy=0.5, object_count=2)
+    assert result.trigger is True
+    assert result.quality_hint in {"Normal", "Active", "Critical"}
+
+    recorder = TelemetryRecorder()
+    metric = recorder.update_state("cam-telemetry", "Active")
+    assert metric.adaptive_quality_state == "Active"
+
+    event = build_edge_event(
+        event_type="ANPR",
+        camera_id="cam-telemetry",
+        identifier_type="vehicle_plate",
+        raw_identifier="gj05ab1234",
+        normalized_identifier="GJ05AB1234",
+        confidence=0.92,
+        location=(23.0225, 72.5714),
+        evidence=EvidenceRef(thumbnail_uri="s3://edge/thumb.jpg", clip_uri="s3://edge/clip.mp4"),
+        pipeline=PipelineContext(
+            node_id="edge-01",
+            model_version="yolov8-plate-v1",
+            source_frame_time="2026-09-04T10:00:00Z",
+            quality_state="Active",
+            inference_tier="high",
+            escalation_reason="uncertainty-driven",
+        ),
+    )
+    assert event.event_type == "ANPR"
+    assert event.identifier.normalized == "GJ05AB1234"
+    assert event.pipeline.quality_state == "Active"
