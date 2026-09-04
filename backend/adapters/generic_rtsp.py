@@ -6,7 +6,7 @@ import socket
 import time
 from typing import Optional, List, Dict, Any, AsyncIterator
 from urllib.parse import urlparse
-from adapters.base import (
+from backend.adapters.base import (
     VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
 )
 

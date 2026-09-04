@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 from typing import List, Dict, Any, Optional, AsyncIterator
-from adapters.base import (
+from backend.adapters.base import (
     VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
 )
 

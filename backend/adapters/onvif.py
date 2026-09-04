@@ -4,7 +4,7 @@ import socket
 import uuid
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Any, Optional, AsyncIterator
-from adapters.base import (
+from backend.adapters.base import (
     VMSAdapter, ConnectionResult, RemoteCamera, StreamDescriptor, HealthStatus, RemoteEvent
 )
 
