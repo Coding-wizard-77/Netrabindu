@@ -1,11 +1,17 @@
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
+from models.detection.yolo_like import YOLOLikeDetector
 from models.ocr.paddle_ocr import PaddleOCRAdapter
+from models.reid.embedding import LightweightReIDAdapter
 from models.tracking.bytetrack import ByteTrackTracker
 from services.adaptive_edge.engine import QualityState, AdaptiveController
+from services.adaptive_edge.pipeline import AdaptivePipeline
 from services.adaptive_edge.sentinel import ActivitySentinel
 from services.adaptive_edge.telemetry import TelemetryRecorder
 from services.analytics.events import build_edge_event, EvidenceRef, PipelineContext
+from services.evidence.buffer import RollingEvidenceBuffer
 
 
 def test_quality_state_machine_tracks_idle_to_critical():
@@ -93,3 +99,43 @@ def test_sentinel_and_event_contract_are_consistent():
     assert event.event_type == "ANPR"
     assert event.identifier.normalized == "GJ05AB1234"
     assert event.pipeline.quality_state == "Active"
+
+
+def test_evidence_buffer_keeps_time_windowed_event_context():
+    buffer = RollingEvidenceBuffer(max_seconds=30, pre_event_seconds=10, post_event_seconds=5)
+    event_time = datetime(2026, 9, 4, 12, 0, tzinfo=timezone.utc)
+
+    for offset in (-12, -8, -2, 0, 4, 9):
+        ts = event_time + timedelta(seconds=offset)
+        buffer.append(uri=f"s3://edge/{offset}.jpg", checksum=f"sha-{offset}", timestamp=ts)
+
+    context = buffer.snapshot_for_event(event_time=event_time)
+    assert len(context) == 4
+    assert [frame.uri for frame in context] == [
+        "s3://edge/-8.jpg",
+        "s3://edge/-2.jpg",
+        "s3://edge/0.jpg",
+        "s3://edge/4.jpg",
+    ]
+
+
+def test_yolo_like_detector_and_reid_similarity_work():
+    detector = YOLOLikeDetector()
+    detections = detector.predict({"objects": ["vehicle", "person", "plate"]})
+    assert len(detections.boxes) >= 1
+    assert any(box.class_id == 2 for box in detections.boxes)
+
+    reid = LightweightReIDAdapter()
+    same = reid.compare([0.9, 0.8, 0.7], [0.91, 0.81, 0.71])
+    diff = reid.compare([0.1, 0.2, 0.3], [0.9, 0.8, 0.7])
+    assert same > 0.95
+    assert diff < 0.5
+
+
+def test_adaptive_pipeline_emits_state_and_quality_plan():
+    pipeline = AdaptivePipeline()
+    decision = pipeline.evaluate(camera_id="cam-pipeline", motion_score=0.8, scene_entropy=0.7, object_count=3, watchlist=False, uncertainty=0.6)
+    assert decision["quality_state"] in {"Normal", "Active", "Critical"}
+    assert decision["sentinel"]["trigger"] is True
+    assert "inference_tier" in decision
+    assert decision["reasons"]
