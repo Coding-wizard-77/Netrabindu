@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.dependencies import get_current_user, require_role
@@ -22,18 +22,33 @@ class AlertOut(BaseModel):
     entity_id: str
     severity: str
     state: str
-    notes: Optional[str]
-    dispatch_unit: Optional[str]
-    acknowledged_by: Optional[str]
-    resolved_by: Optional[str]
+    notes: Optional[str] = None
+    dispatch_unit: Optional[str] = None
+    acknowledged_by: Optional[str] = None
+    resolved_by: Optional[str] = None
     created_at: datetime
-    acknowledged_at: Optional[datetime]
-    resolved_at: Optional[datetime]
+    acknowledged_at: Optional[datetime] = None
+    resolved_at: Optional[datetime] = None
     entity_identifier: Optional[str] = None
+    target_identifier: Optional[str] = None
+    detected_identifier: Optional[str] = None
+    watchlist_category: Optional[str] = "GENERAL"
+    confidence: Optional[float] = 0.95
+    camera_id: Optional[str] = None
     camera_name: Optional[str] = None
+    camera_code: Optional[str] = None
+    department_name: Optional[str] = None
+    occurred_at: Optional[datetime] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     evidence: Optional[dict] = None
+
+    @computed_field
+    @property
+    def location(self) -> Dict[str, float]:
+        lat = self.latitude if self.latitude is not None else 0.0
+        lon = self.longitude if self.longitude is not None else 0.0
+        return {"lat": lat, "lon": lon}
 
     class Config:
         from_attributes = True
@@ -60,6 +75,11 @@ def list_alerts(
         event = a.detection_event
         entity = a.watchlist_entity
         cam = event.camera if event else None
+        dept = cam.department if cam else None
+
+        raw_id = event.identifier.get("raw") if (event and isinstance(event.identifier, dict)) else None
+        target_id = entity.identifier if entity else raw_id
+        detected_id = raw_id if raw_id else target_id
 
         results.append(AlertOut(
             id=a.id,
@@ -74,8 +94,16 @@ def list_alerts(
             created_at=a.created_at,
             acknowledged_at=a.acknowledged_at,
             resolved_at=a.resolved_at,
-            entity_identifier=entity.identifier if entity else None,
+            entity_identifier=target_id,
+            target_identifier=target_id,
+            detected_identifier=detected_id,
+            watchlist_category=entity.category if entity else "GENERAL",
+            confidence=event.confidence if event else 0.95,
+            camera_id=cam.id if cam else (event.camera_id if event else None),
             camera_name=cam.name if cam else None,
+            camera_code=cam.camera_code if cam else None,
+            department_name=dept.name if dept else None,
+            occurred_at=event.occurred_at if event else a.created_at,
             latitude=cam.latitude if cam else (event.latitude if event else None),
             longitude=cam.longitude if cam else (event.longitude if event else None),
             evidence=event.evidence_ref if event else {}

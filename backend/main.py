@@ -20,7 +20,7 @@ try:
     from backend.services.events.bus import event_bus
     from backend.services.alerts.ws_manager import alert_ws_manager
     from backend.routers import (
-        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit
+        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations
     )
 except ImportError:
     from config import settings
@@ -29,7 +29,7 @@ except ImportError:
     from services.events.bus import event_bus
     from services.alerts.ws_manager import alert_ws_manager
     from routers import (
-        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit
+        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations
     )
 
 logging.basicConfig(
@@ -75,6 +75,7 @@ app.include_router(alerts.router)
 app.include_router(health.router)
 app.include_router(metrics.router)
 app.include_router(audit.router)
+app.include_router(integrations.router)
 
 @app.websocket("/ws/alerts")
 async def websocket_alerts(websocket: WebSocket, token: str = Query(...)):
