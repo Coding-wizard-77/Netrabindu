@@ -4,7 +4,7 @@
 
 ## 1. Project Overview
 
-GujHack is a hybrid, edge-first CCTV intelligence platform designed to integrate heterogeneous IP cameras, NVRs and departmental VMS systems into a unified command and investigation platform.
+NetraBindu is a hybrid, edge-first CCTV intelligence platform designed to integrate heterogeneous IP cameras, NVRs and departmental VMS systems into a unified command and investigation platform.
 
 The system combines:
 
@@ -242,7 +242,7 @@ This is a **single shared repository**.
 The three engineers do not build three independent applications.
 
 ```text
-GujHack/
+NetraBindu/
 │
 ├── README.md
 ├── TEAM_COORDINATION_MANIFEST.docx
