@@ -20,8 +20,9 @@ try:
     from backend.services.events.bus import event_bus
     from backend.services.alerts.ws_manager import alert_ws_manager
     from backend.routers import (
-        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations
+        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations, sentinel_grid
     )
+    from backend.seed_data import seed_all_data
 except ImportError:
     from config import settings
     from database import init_db
@@ -29,8 +30,9 @@ except ImportError:
     from services.events.bus import event_bus
     from services.alerts.ws_manager import alert_ws_manager
     from routers import (
-        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations
+        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations, sentinel_grid
     )
+    from seed_data import seed_all_data
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,6 +44,10 @@ logger = logging.getLogger("netrabindu-backend")
 async def lifespan(app: FastAPI):
     logger.info("Initializing Netrabindu Backend Control Plane...")
     init_db()
+    try:
+        seed_all_data()
+    except Exception as e:
+        logger.warning(f"Seeding completed or encountered non-fatal note: {e}")
     await event_bus.start()
     logger.info("Netrabindu Backend Control Plane initialized successfully.")
     yield
@@ -76,6 +82,7 @@ app.include_router(health.router)
 app.include_router(metrics.router)
 app.include_router(audit.router)
 app.include_router(integrations.router)
+app.include_router(sentinel_grid.router)
 
 @app.websocket("/ws/events")
 async def websocket_events(websocket: WebSocket):

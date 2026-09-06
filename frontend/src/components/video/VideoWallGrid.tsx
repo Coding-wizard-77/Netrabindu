@@ -18,12 +18,15 @@ export const VideoWallGrid: React.FC<VideoWallGridProps> = ({ onSlotClick }) => 
     '3x3': 'grid-cols-3 grid-rows-3',
     '1+5': 'grid-cols-3 grid-rows-3',
     '4x4': 'grid-cols-4 grid-rows-4',
+    '5x5': 'grid-cols-5 auto-rows-fr',
+    '6x6': 'grid-cols-6 auto-rows-fr',
+    '50-GRID': 'grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 auto-rows-fr',
   };
 
   const slotKeys = Object.keys(slots).map(Number);
 
   return (
-    <div className={clsx('grid gap-2 w-full h-full min-h-[600px] p-2 bg-[#090d16] rounded-xl border border-slate-800', gridLayoutClasses[layout])}>
+    <div className={clsx('grid gap-2 w-full h-full min-h-[600px] max-h-full overflow-y-auto p-2 bg-[#090d16] rounded-xl border border-slate-800', gridLayoutClasses[layout])}>
       {slotKeys.map((index) => {
         const camera = slots[index];
         const isMasterSlot = layout === '1+5' && index === 0;
@@ -36,7 +39,7 @@ export const VideoWallGrid: React.FC<VideoWallGridProps> = ({ onSlotClick }) => 
               if (onSlotClick) onSlotClick(index);
             }}
             className={clsx(
-              'relative rounded-lg overflow-hidden border transition-all cursor-pointer bg-slate-950/80 group',
+              'relative rounded-lg overflow-hidden border transition-all cursor-pointer bg-slate-950/80 group aspect-video min-h-[120px]',
               selectedSlotIndex === index ? 'border-cyan-500 shadow-lg shadow-cyan-950/50' : 'border-slate-800 hover:border-slate-700',
               isMasterSlot && 'col-span-2 row-span-2'
             )}

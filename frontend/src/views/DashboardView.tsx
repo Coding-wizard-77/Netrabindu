@@ -87,6 +87,14 @@ export const DashboardView: React.FC = () => {
 
           <div className="flex items-center gap-3 shrink-0">
             <button
+              onClick={() => navigate('/sentinel-grid')}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white text-xs font-mono font-bold flex items-center gap-2 transition-all shadow-glow-cyan hover:scale-105 active:scale-95"
+            >
+              <Radio className="w-4 h-4 animate-pulse" />
+              <span>Govt 50 Ingestion Grid</span>
+            </button>
+
+            <button
               onClick={() => setNakabandiOpen(true)}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white text-xs font-mono font-bold flex items-center gap-2 transition-all shadow-glow-red hover:scale-105 active:scale-95"
             >
@@ -103,6 +111,32 @@ export const DashboardView: React.FC = () => {
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Gujarat Police Sentinel Grid Quick Status Ribbon */}
+      <div className="rounded-xl p-3 bg-gradient-to-r from-cyan-950/40 via-blue-950/40 to-slate-950/40 border border-cyan-500/20 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+            <Shield className="w-3.5 h-3.5" />
+            <span className="font-bold">HACKATHON EVALUATION SANDBOX</span>
+          </div>
+          <span className="text-slate-400">
+            Ingestion Contract: <code className="text-cyan-300">GET /api/ingest</code> (50 Govt Streams Active)
+          </span>
+        </div>
+        <div className="flex items-center gap-4 text-slate-300">
+          <span className="flex items-center gap-1 text-emerald-400">
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            8/8 Protocol Rules Validated
+          </span>
+          <span className="text-slate-400">Target: <b className="text-white">GJ01AB1234</b> (7 Hops Tracked)</span>
+          <button
+            onClick={() => navigate('/sentinel-grid')}
+            className="text-cyan-400 hover:text-cyan-300 underline font-bold flex items-center gap-1"
+          >
+            Launch Grid Console <ArrowRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 

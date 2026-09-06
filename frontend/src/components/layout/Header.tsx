@@ -14,6 +14,7 @@ import {
   FileText
 } from 'lucide-react';
 import { tacticalAudio } from '../../utils/audio';
+import { SentinelGridValidatorModal } from '../sentinel/SentinelGridValidatorModal';
 
 interface HeaderProps {
   darkMode: boolean;
@@ -38,6 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [dateStr, setDateStr] = useState<string>('');
   const [isMuted, setIsMuted] = useState<boolean>(tacticalAudio.isMuted());
   const [quickPlate, setQuickPlate] = useState<string>('');
+  const [sentinelModalOpen, setSentinelModalOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -137,6 +139,20 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right: Actions, Clock & Tactical Toggles */}
       <div className="flex items-center space-x-3">
+        {/* Gujarat Sentinel Grid Live Validator Button */}
+        <button
+          onClick={() => {
+            tacticalAudio.playKeyClick();
+            setSentinelModalOpen(true);
+          }}
+          title="Open Gujarat Police Sentinel Grid Ingestion & Stream Diagnostics"
+          className="flex items-center space-x-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-2.5 py-1.5 text-xs font-bold text-cyan-300 hover:bg-cyan-900/60 hover:border-cyan-400 transition-colors shadow-glow-cyan"
+        >
+          <Radio className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
+          <span>SENTINEL GRID</span>
+          <span className="rounded bg-cyan-500/20 px-1 py-0.2 text-[9px] font-mono text-cyan-300 border border-cyan-500/40">50 CAMS</span>
+        </button>
+
         {/* Quick Police Actions */}
         {onTriggerNakabandi && (
           <button
@@ -223,6 +239,11 @@ export const Header: React.FC<HeaderProps> = ({
           {darkMode ? <Sun className="h-4 w-4 text-amber-500 animate-spin-slow" /> : <Moon className="h-4 w-4 text-indigo-600" />}
         </button>
       </div>
+
+      <SentinelGridValidatorModal
+        isOpen={sentinelModalOpen}
+        onClose={() => setSentinelModalOpen(false)}
+      />
     </header>
   );
 };

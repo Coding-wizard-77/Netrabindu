@@ -126,21 +126,23 @@ export const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
     >
       {/* Video Viewport */}
       <div className={`relative flex-1 bg-navy-950 flex items-center justify-center overflow-hidden ${getFilterStyle()}`}>
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-30 z-10"></div>
+        {/* Real Live Camera Video Stream */}
+        <img
+          src={streamUrl || `/stream/${resolvedId}`}
+          alt={`Live feed from ${resolvedName}`}
+          className="absolute inset-0 w-full h-full object-cover z-0"
+          onError={(e) => {
+            const target = e.currentTarget;
+            // Retry with explicit localhost:8000 if relative proxy was pending
+            if (!target.src.includes(':8000')) {
+              target.src = `http://localhost:8000/stream/${resolvedId}`;
+            }
+          }}
+        />
 
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center space-y-2 opacity-60">
-            <Wifi className="h-12 w-12 text-accent-cyan mx-auto animate-pulse" />
-            <div className="font-mono text-xs text-slate-400">
-              RTSP/HLS LIVE FEED: {resolvedId}
-            </div>
-            <div className="font-mono text-[10px] text-accent-cyan">
-              {resolvedFps} FPS | {bitrate} | 1080p60
-            </div>
-          </div>
-        </div>
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%)] bg-[length:100%_4px] opacity-25 z-10"></div>
 
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-20">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-20 z-10">
           <Crosshair className="h-48 w-48 text-accent-cyan" />
         </div>
 

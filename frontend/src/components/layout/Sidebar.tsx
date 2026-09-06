@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { clsx } from 'clsx';
 import {
   LayoutDashboard,
+  Radio,
   Camera,
   Grid,
   Zap,
@@ -37,7 +38,8 @@ const navigationGroups: NavGroup[] = [
     group: 'TACTICAL COMMAND',
     items: [
       { name: 'Command Dashboard', path: '/', icon: LayoutDashboard, badge: 'LIVE' },
-      { name: 'Live Video Wall', path: '/live', icon: Grid, badge: '16x' },
+      { name: 'Sentinel Govt Grid', path: '/sentinel-grid', icon: Radio, badge: 'GOVT 50', pulse: true },
+      { name: 'Live Video Wall', path: '/live', icon: Grid, badge: '50x' },
       { name: 'AI ANPR Stream', path: '/events', icon: Zap, pulse: true },
       { name: 'Alerts & Hotlist', path: '/alerts', icon: AlertTriangle, alertBadge: true },
     ],

@@ -10,6 +10,7 @@ import { AlertsView } from './views/AlertsView';
 import { WatchlistsView } from './views/WatchlistsView';
 import { HealthView } from './views/HealthView';
 import { AuditView } from './views/AuditView';
+import { SentinelGridView } from './views/SentinelGridView';
 import { LoginView } from './views/LoginView';
 import { FirstRunSetupView } from './views/FirstRunSetupView';
 
@@ -21,6 +22,7 @@ export const App: React.FC = () => {
 
       <Route path="/" element={<AppLayout />}>
         <Route index element={<DashboardView />} />
+        <Route path="sentinel-grid" element={<SentinelGridView />} />
         <Route path="cameras" element={<CameraRegistryView />} />
         <Route path="live" element={<LiveViewMatrixView />} />
         <Route path="events" element={<EventsView />} />

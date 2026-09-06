@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, Iterable, List
 
-from models.detection.base import BaseDetector, DetectionBox, DetectionResult
+try:
+    from ai_models.models.detection.base import BaseDetector, DetectionBox, DetectionResult
+except ImportError:
+    from models.detection.base import BaseDetector, DetectionBox, DetectionResult
 
 
 class YOLOLikeDetector(BaseDetector):

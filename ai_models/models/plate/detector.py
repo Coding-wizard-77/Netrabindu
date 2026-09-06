@@ -3,7 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from models.detection.base import BaseDetector, DetectionBox, DetectionResult
+try:
+    from ai_models.models.detection.base import BaseDetector, DetectionBox, DetectionResult
+except ImportError:
+    from models.detection.base import BaseDetector, DetectionBox, DetectionResult
 
 
 @dataclass

@@ -26,44 +26,13 @@ SAMPLE_TARGET_PLATES = [
     "GJ18PQ8888"
 ]
 
+from ai_models.sentinel_grid_ingestor import sentinel_ingestor
+
 async def run_ai_edge_worker():
-    logger.info("=" * 65)
-    logger.info(f"NetraBindu Edge AI Sentinel Worker starting on Node: {ai_config.NODE_ID}")
-    logger.info(f"Region: {ai_config.REGION}")
-    logger.info(f"Target Backend API: {ai_config.BACKEND_API_URL}")
-    logger.info("=" * 65)
-    
-    iteration = 0
-    while True:
-        iteration += 1
-        cam = random.choice(CORRIDOR_CAMERAS)
-        plate = random.choice(SAMPLE_TARGET_PLATES)
-        
-        # Simulate adaptive quality state
-        quality = random.choices(["Normal", "Active", "Critical"], weights=[0.6, 0.3, 0.1])[0]
-        
-        # Execute vision inference
-        event = inference_pipeline.process_frame(
-            frame=None,
-            camera_id=cam["id"],
-            camera_code=cam["code"],
-            lat=cam["lat"],
-            lon=cam["lon"],
-            quality_state=quality,
-            synthetic_plate=plate
-        )
-        
-        logger.info(f"[Frame Ingest] Cam: {cam['code']} ({cam['name']}) | Plate: {plate} | State: {quality}")
-        
-        # Push event to backend
-        await event_publisher.publish_detection(event)
-        
-        # Interval between surveillance detections (adaptive interval)
-        sleep_interval = random.uniform(3.0, 7.0)
-        await asyncio.sleep(sleep_interval)
+    await sentinel_ingestor.run_corridor_surveillance()
 
 if __name__ == "__main__":
     try:
         asyncio.run(run_ai_edge_worker())
     except KeyboardInterrupt:
-        logger.info("Edge AI Worker stopped by operator.")
+        logger.info("Edge AI Sentinel Worker stopped by operator.")

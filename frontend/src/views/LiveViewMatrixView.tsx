@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera } from '../types';
 import { camerasApi } from '../api/cameras';
+import { sentinelApi, IngestCameraItem } from '../api/sentinel';
 import { VideoWallGrid } from '../components/video/VideoWallGrid';
 import { useVideoWallStore, GridLayout } from '../store/useVideoWallStore';
 import { Button } from '../components/common/Button';
@@ -11,24 +12,76 @@ export const LiveViewMatrixView: React.FC = () => {
   const [cameras, setCameras] = useState<Camera[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const { layout, setLayout, slots, assignCameraToSlot, selectedSlotIndex, clearWall } = useVideoWallStore();
+  const layouts: GridLayout[] = ['1x1', '2x2', '3x3', '1+5', '4x4', '5x5', '6x6', '50-GRID'];
+
+  const { layout, setLayout, slots, assignCameraToSlot, populateAllCameras, selectedSlotIndex, clearWall } = useVideoWallStore();
 
   useEffect(() => {
     async function loadCameras() {
-      const res = await camerasApi.getCameras();
+      let res: Camera[] = [];
+      try {
+        res = await camerasApi.getCameras({ limit: 100 });
+      } catch (err) {
+        console.warn('Falling back to /api/ingest catalog:', err);
+      }
+
+      if (!res || res.length === 0) {
+        try {
+          const catalogRes = await sentinelApi.getIngestCatalog();
+          if (catalogRes?.catalogue) {
+            res = catalogRes.catalogue.map((c: IngestCameraItem): Camera => ({
+              id: c.id,
+              camera_code: c.camera_code,
+              name: c.name,
+              department_id: c.department_code,
+              department_code: c.department_code,
+              department_name: c.department_name,
+              location: { lat: c.latitude, lon: c.longitude },
+              address: c.address,
+              vendor: 'Gujarat Government Certified',
+              model: 'DS-2CD-GujaratSentinel',
+              source_type: 'DIRECT_RTSP',
+              status: (c.live_status as any) || 'ONLINE',
+              protocol: 'RTSP',
+              analytics_profile: 'ANPR',
+              retention_days: 15,
+              fps: 25,
+              bitrate_kbps: 2048,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }));
+          }
+        } catch (catErr) {
+          console.error('Catalog fetch failed:', catErr);
+        }
+      }
+
       setCameras(res);
 
-      if (!slots[0] && res.length > 0) {
-        assignCameraToSlot(0, res[0] || null);
-        if (res[1]) assignCameraToSlot(1, res[1]);
-        if (res[2]) assignCameraToSlot(2, res[2]);
-        if (res[3]) assignCameraToSlot(3, res[3]);
+      if (res.length > 0) {
+        const slotCount =
+          layout === '1x1' ? 1 :
+          layout === '2x2' ? 4 :
+          layout === '1+5' ? 6 :
+          layout === '3x3' ? 9 :
+          layout === '4x4' ? 16 :
+          layout === '5x5' ? 25 :
+          layout === '6x6' ? 36 : 50;
+
+        for (let i = 0; i < Math.min(slotCount, res.length); i++) {
+          assignCameraToSlot(i, res[i]);
+        }
       }
     }
     loadCameras();
-  }, []);
+  }, [layout]);
 
-  const layouts: GridLayout[] = ['1x1', '2x2', '3x3', '1+5', '4x4'];
+  const handlePopulateAll50 = () => {
+    setLayout('50-GRID');
+    for (let i = 0; i < Math.min(50, cameras.length); i++) {
+      assignCameraToSlot(i, cameras[i]);
+    }
+  };
 
   const filteredCameras = cameras.filter(
     (c) =>
@@ -47,30 +100,47 @@ export const LiveViewMatrixView: React.FC = () => {
           <div>
             <div className="text-sm font-black font-mono text-slate-900 dark:text-white tracking-wider uppercase flex items-center gap-2">
               Tactical Video Wall Matrix
-              <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-mono">1080P60 HLS/WebRTC</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-600 dark:text-cyan-300 font-mono">
+                {layout === '50-GRID' ? '50 CAMERAS SIMULTANEOUS' : `${layout} HLS/MJPEG`}
+              </span>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Multi-Spectrum Surveillance Matrix &amp; PTZ Control</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+              Live Inter-Departmental Surveillance ({cameras.length} Government Nodes Available)
+            </p>
           </div>
         </div>
 
         {/* Layout Switcher Pills */}
-        <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-xl border border-slate-200 dark:border-navy-800">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-navy-950 p-1.5 rounded-xl border border-slate-200 dark:border-navy-800 overflow-x-auto">
           {layouts.map((l) => (
             <button
               key={l}
-              onClick={() => setLayout(l)}
-              className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
+              onClick={() => {
+                setLayout(l);
+                if (l === '50-GRID') {
+                  handlePopulateAll50();
+                }
+              }}
+              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all shrink-0 ${
                 layout === l
                   ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-glow-cyan'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-navy-850'
               }`}
             >
-              {l}
+              {l === '50-GRID' ? '50 ALL' : l}
             </button>
           ))}
         </div>
 
         <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="primary"
+            icon={<Radio className="w-3.5 h-3.5" />}
+            onClick={handlePopulateAll50}
+          >
+            Show All 50 Cameras
+          </Button>
           <Button
             size="sm"
             variant="secondary"

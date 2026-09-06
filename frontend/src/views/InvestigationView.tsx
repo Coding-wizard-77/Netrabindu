@@ -9,6 +9,7 @@ import { PlateConfidenceBreakdown } from '../components/investigation/PlateConfi
 import { VahanVehicleDossier } from '../components/police/VahanVehicleDossier';
 import { Section65BCertificateModal } from '../components/police/Section65BCertificateModal';
 import { NakabandiLockdownModal } from '../components/police/NakabandiLockdownModal';
+import { OfficialHackathonReportModal } from '../components/investigation/OfficialHackathonReportModal';
 import { Search, MapPin, AlertCircle, FileText, Gauge, Clock, ShieldCheck, ShieldAlert } from 'lucide-react';
 import { formatLicensePlateDisplay } from '../utils/normalizer';
 
@@ -20,6 +21,7 @@ export const InvestigationView: React.FC = () => {
   const [showReport, setShowReport] = useState(false);
   const [cert65BOpen, setCert65BOpen] = useState(false);
   const [nakabandiOpen, setNakabandiOpen] = useState(false);
+  const [hackathonReportOpen, setHackathonReportOpen] = useState(false);
 
   const handleSearch = async (plate: string, from?: string, to?: string) => {
     try {
@@ -82,6 +84,15 @@ export const InvestigationView: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setHackathonReportOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-colors shadow"
+                  title="Official Gujarat Police Evaluation Output Report"
+                >
+                  <FileText className="w-3.5 h-3.5 text-amber-200" />
+                  Official Output Report
+                </button>
+
                 <button
                   onClick={() => setNakabandiOpen(true)}
                   className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-colors shadow"
@@ -183,6 +194,11 @@ export const InvestigationView: React.FC = () => {
         isOpen={nakabandiOpen}
         onClose={() => setNakabandiOpen(false)}
         targetPlate={routeData?.normalized_plate || 'GJ 01 AB 1234'}
+      />
+      <OfficialHackathonReportModal
+        isOpen={hackathonReportOpen}
+        onClose={() => setHackathonReportOpen(false)}
+        plate={routeData?.normalized_plate || 'GJ01AB1234'}
       />
     </div>
   );
