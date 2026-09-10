@@ -1,18 +1,23 @@
 import os
 import time
+import asyncio
 import cv2
 import numpy as np
 import math
-from typing import Dict, Any, Optional, Generator
+import threading
+import re
+from typing import Dict, Any, Optional, AsyncGenerator
 from fastapi import APIRouter, Depends, Query, Request, HTTPException
 from fastapi.responses import HTMLResponse, StreamingResponse
 from sqlalchemy.orm import Session
+from backend.config import settings
 from backend.database import get_db
 from backend.dependencies import get_current_user
-from backend.services.camera_registry.models import User, Camera
+from backend.services.camera_registry.models import User, Camera, CameraSource, Department
 from backend.services.sentinel_grid.schemas import (
     IngestCatalogResponse, StreamValidationRequest, StreamValidationResult,
-    PreSubmissionChecklistReport, HackathonOutputReport
+    PreSubmissionChecklistReport, HackathonOutputReport,
+    ExternalSyncRequest, ExternalSyncResponse
 )
 from backend.services.sentinel_grid.ingest_catalog import sentinel_catalog_service
 from backend.services.sentinel_grid.grid_validator import sentinel_validator
@@ -21,105 +26,212 @@ from backend.services.audit.logger import audit_service
 
 router = APIRouter(tags=["Gujarat Government Sentinel Grid & Ingest"])
 
-def generate_live_camera_mjpeg(cam: Camera) -> Generator[bytes, None, None]:
+def render_connecting_frame(cam: Camera, frame_idx: int) -> np.ndarray:
+    """
+    Renders a clean, dark tactical standby slate while real RTSP video stream is acquiring.
+    Does NOT draw any simulated or mock video.
+    """
+    width, height = 640, 360
+    cam_name = (cam.name if cam else "SURVEILLANCE NODE").upper()
+    cam_code = (cam.camera_code if cam else "GJ-POL-CAM-01").upper()
+    dept_code = (cam.department.code if cam and cam.department else "HOME-POLICE").upper()
+
+    # Dark tactical surveillance canvas
+    img = np.zeros((height, width, 3), dtype=np.uint8)
+    img[:] = [14, 12, 10]  # Very dark slate
+
+    # Subtle radar reticle in center
+    cx, cy = width // 2, height // 2
+    cv2.circle(img, (cx, cy), 35, (35, 48, 60), 1)
+    cv2.circle(img, (cx, cy), 70, (25, 35, 45), 1)
+    cv2.line(img, (cx - 85, cy), (cx + 85, cy), (28, 40, 52), 1)
+    cv2.line(img, (cx, cy - 85), (cx, cy + 85), (28, 40, 52), 1)
+
+    # Pulsing radar beacon line
+    angle = (frame_idx * 7) % 360
+    rad = math.radians(angle)
+    px = int(cx + 68 * math.cos(rad))
+    py = int(cy + 68 * math.sin(rad))
+    cv2.line(img, (cx, cy), (px, py), (0, 190, 230), 1)
+
+    # Status text in center
+    status_text = "SANDBOX COOLDOWN ACTIVE"
+    cv2.putText(img, status_text, (cx - 120, cy + 55), cv2.FONT_HERSHEY_PLAIN, 0.88, (0, 220, 255), 1)
+    sub_text = "cctv.corp8.cloud: Watch time limit reached | Retrying every 3s"
+    cv2.putText(img, sub_text, (cx - 200, cy + 74), cv2.FONT_HERSHEY_PLAIN, 0.72, (110, 160, 180), 1)
+
+    # Top Telemetry Bar
+    cv2.rectangle(img, (0, 0), (width, 22), (15, 18, 24), -1)
+    cv2.line(img, (0, 22), (width, 22), (30, 42, 55), 1)
+    rec_col = (0, 140, 255) if (frame_idx // 8) % 2 == 0 else (40, 60, 80)
+    cv2.circle(img, (12, 11), 3, rec_col, -1)
+    cv2.putText(img, "RTSP SYNC", (18, 14), cv2.FONT_HERSHEY_PLAIN, 0.78, (210, 210, 210), 1)
+    cv2.putText(img, f"{cam_code} | {cam_name[:32]}", (90, 14), cv2.FONT_HERSHEY_PLAIN, 0.78, (0, 220, 255), 1)
+
+    # Bottom Telemetry Bar
+    cv2.rectangle(img, (0, height - 20), (width, height), (15, 18, 24), -1)
+    cv2.line(img, (0, height - 20), (width, height - 20), (30, 42, 55), 1)
+    curr_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    cv2.putText(img, f"{curr_time} IST | ACQUIRING LIVE CARRIER", (8, height - 6), cv2.FONT_HERSHEY_PLAIN, 0.72, (0, 220, 255), 1)
+    cv2.putText(img, f"GUJARAT GRID [{dept_code}]", (width - 180, height - 6), cv2.FONT_HERSHEY_PLAIN, 0.70, (140, 205, 160), 1)
+
+    return img
+
+
+
+class SentinelStreamWorker:
+    """Ingests live RTSP stream for a specific camera in a non-blocking background thread with demand throttling."""
+    def __init__(self, cam_id: str, rtsp_url: str):
+        self.cam_id = cam_id
+        self.rtsp_url = rtsp_url
+        self.latest_frame: Optional[np.ndarray] = None
+        self.last_seen = 0.0
+        self.last_requested = time.time()
+        self.running = True
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self.thread.start()
+
+    def get_latest_frame(self) -> Optional[np.ndarray]:
+        self.last_requested = time.time()
+        if self.latest_frame is not None and (time.time() - self.last_seen < 8.0):
+            return self.latest_frame
+        return None
+
+    def _run(self):
+        os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|timeout;5000000"
+        while self.running:
+            # If camera hasn't been requested in the last 30 seconds, pause decoding to save CPU & network
+            if time.time() - self.last_requested > 30.0:
+                time.sleep(1.0)
+                continue
+
+            try:
+                cap = cv2.VideoCapture(self.rtsp_url, cv2.CAP_FFMPEG)
+                if not cap.isOpened():
+                    time.sleep(1.5)
+                    continue
+
+                while self.running and cap.isOpened():
+                    if time.time() - self.last_requested > 30.0:
+                        break
+
+                    ret, frame = cap.read()
+                    if ret and frame is not None:
+                        h, w = frame.shape[:2]
+                        if w != 640 or h != 360:
+                            frame = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_LINEAR)
+                        self.latest_frame = frame
+                        self.last_seen = time.time()
+                    else:
+                        break
+                cap.release()
+            except Exception:
+                pass
+            time.sleep(1.0)
+
+
+class SentinelStreamManager:
+    """Manages multi-channel live ingest from the Gujarat Sentinel RTSP gateway."""
+    _workers: Dict[str, SentinelStreamWorker] = {}
+    _lock = threading.Lock()
+
+    @classmethod
+    def get_frame(cls, cam: Camera, frame_idx: int, start_time: float) -> np.ndarray:
+        cam_code = (cam.camera_code if cam else "cam01").lower()
+        cam_name = (cam.name if cam else "").lower()
+
+        # Resolve camera short ID, e.g. "cam01" through "cam30"
+        short_id = None
+        for i in range(1, 31):
+            tag = f"cam{i:02d}"
+            if tag in cam_code or f"cam-{i:02d}" in cam_code or f"cam {i}" in cam_name or f"{i:02d} " in cam_name:
+                short_id = tag
+                break
+
+        # Regex fallback for codes like GJ-POL-CAM-02, CAM-2, etc.
+        if not short_id:
+            m = re.search(r'(\d+)', cam_code)
+            if m:
+                num = int(m.group(1))
+                if 1 <= num <= 30:
+                    short_id = f"cam{num:02d}"
+
+        if not short_id:
+            short_id = "cam01"
+
+        with cls._lock:
+            if short_id not in cls._workers:
+                encoded_email = settings.SENTINEL_EMAIL.replace("@", "%40")
+                rtsp_url = f"rtsp://{encoded_email}:{settings.SENTINEL_PASSWORD}@{settings.SENTINEL_PUBLIC_IP}:{settings.SENTINEL_RTSP_PORT}/stream/{short_id}"
+                cls._workers[short_id] = SentinelStreamWorker(short_id, rtsp_url)
+
+        real_frame = cls._workers[short_id].get_latest_frame()
+        if real_frame is not None:
+            try:
+                frame = real_frame.copy()
+                h, w = frame.shape[:2]
+                if w != 640 or h != 360:
+                    frame = cv2.resize(frame, (640, 360), interpolation=cv2.INTER_LINEAR)
+
+                time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                curr_t = time.time()
+                pts_ms = (curr_t - start_time) * 1000.0
+
+                # Top Watermark Overlay
+                cv2.rectangle(frame, (0, 0), (640, 22), (10, 14, 18), -1)
+                cv2.line(frame, (0, 22), (640, 22), (25, 38, 50), 1)
+                rec_col = (0, 0, 255) if (frame_idx // 12) % 2 == 0 else (40, 40, 80)
+                cv2.circle(frame, (12, 11), 3, rec_col, -1)
+                cv2.putText(frame, "LIVE REC", (18, 14), cv2.FONT_HERSHEY_PLAIN, 0.78, (210, 210, 210), 1)
+                cv2.putText(frame, f"{cam.camera_code} | {cam.name[:28]}", (76, 14), cv2.FONT_HERSHEY_PLAIN, 0.78, (0, 220, 255), 1)
+                cv2.putText(frame, "SENTINEL 1080p RELAY", (480, 14), cv2.FONT_HERSHEY_PLAIN, 0.72, (150, 230, 180), 1)
+
+                # Bottom Watermark Overlay
+                cv2.rectangle(frame, (0, 340), (640, 360), (10, 14, 18), -1)
+                cv2.line(frame, (0, 340), (640, 340), (25, 38, 50), 1)
+                cv2.putText(frame, f"{time_str} IST | PTS: {pts_ms:.1f}ms", (8, 354), cv2.FONT_HERSHEY_PLAIN, 0.72, (0, 220, 255), 1)
+                dept_label = cam.department.code if cam.department else "HOME-POLICE"
+                cv2.putText(frame, f"GUJARAT GRID [{dept_label}]", (450, 354), cv2.FONT_HERSHEY_PLAIN, 0.70, (140, 205, 160), 1)
+                return frame
+            except Exception:
+                pass
+
+        # If real RTSP stream is still connecting, display clean tactical standby slate (NO MOCK VIDEO)
+        return render_connecting_frame(cam, frame_idx)
+
+
+async def generate_live_camera_mjpeg(cam: Camera) -> AsyncGenerator[bytes, None]:
     """
     Generates real-time live video frames with telemetry, ANPR tracking overlays,
     PTS monotonic timestamps, and dynamic motion for browser display.
+    Delivers a non-blocking asynchronous 25 FPS stream.
     """
-    width, height = 640, 360
-    cam_name = cam.name if cam else "SURVEILLANCE NODE"
-    cam_code = cam.camera_code if cam else "CAM-01"
-    dept_name = cam.department.name if cam and cam.department else "GUJARAT POLICE GRID"
-    
     frame_idx = 0
     start_time = time.time()
-    
-    # Vehicle simulation for camera feeds
-    has_target = "01" in cam_code or "02" in cam_code or "03" in cam_code or "04" in cam_code or "05" in cam_code
-    
-    while True:
-        frame_idx += 1
-        curr_time = time.time()
-        elapsed = curr_time - start_time
-        pts_ms = elapsed * 1000.0
-        
-        # Base canvas: dark asphalt road perspective
-        img = np.zeros((height, width, 3), dtype=np.uint8)
-        
-        # Sky and background horizon
-        img[0:140, :] = [25, 20, 15]  # Dark twilight sky
-        # Road asphalt
-        img[140:, :] = [42, 45, 48]
-        
-        # Road lanes perspective lines
-        cv2.line(img, (int(width * 0.45), 140), (0, height), (70, 75, 80), 2)
-        cv2.line(img, (int(width * 0.55), 140), (width, height), (70, 75, 80), 2)
-        
-        # Dashed center line with forward motion animation
-        dash_offset = int((frame_idx * 14) % 60)
-        for y in range(140 + dash_offset, height, 40):
-            cv2.line(img, (int(width * 0.5), y), (int(width * 0.5), min(y + 20, height)), (220, 220, 100), 2)
-            
-        # Traffic vehicles passing in lanes
-        car_phase = (frame_idx * 3) % (width + 120) - 60
-        car_y = 220 + int(math.sin(frame_idx * 0.05) * 5)
-        # Car 1
-        cv2.rectangle(img, (car_phase, car_y), (car_phase + 70, car_y + 35), (130, 40, 30), -1)
-        cv2.rectangle(img, (car_phase + 10, car_y - 15), (car_phase + 55, car_y), (100, 30, 20), -1)
-        # Headlights beam
-        pts = np.array([[car_phase + 70, car_y + 10], [car_phase + 140, car_y - 10], [car_phase + 140, car_y + 45], [car_phase + 70, car_y + 25]], np.int32)
-        overlay = img.copy()
-        cv2.fillPoly(overlay, [pts], (240, 240, 180))
-        cv2.addWeighted(overlay, 0.15, img, 0.85, 0, img)
-        
-        # Target evaluation vehicle (GJ 01 AB 1234) on designated cameras
-        if has_target:
-            t_x = int((width * 0.35) + math.sin(frame_idx * 0.08) * 40)
-            t_y = 190 + int(math.cos(frame_idx * 0.06) * 10)
-            # White SUV chassis
-            cv2.rectangle(img, (t_x, t_y), (t_x + 95, t_y + 45), (235, 240, 245), -1)
-            cv2.rectangle(img, (t_x + 15, t_y - 20), (t_x + 80, t_y), (180, 190, 200), -1)
-            # Windows tint
-            cv2.rectangle(img, (t_x + 20, t_y - 16), (t_x + 45, t_y - 2), (40, 45, 50), -1)
-            cv2.rectangle(img, (t_x + 50, t_y - 16), (t_x + 75, t_y - 2), (40, 45, 50), -1)
-            # ANPR Red Bounding Box
-            cv2.rectangle(img, (t_x - 4, t_y - 26), (t_x + 100, t_y + 50), (0, 0, 255), 2)
-            # ANPR Target Plate label
-            cv2.rectangle(img, (t_x - 4, t_y - 48), (t_x + 100, t_y - 26), (0, 0, 200), -1)
-            cv2.putText(img, "GJ01AB1234", (t_x, t_y - 32), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (255, 255, 255), 1, cv2.LINE_AA)
-            cv2.putText(img, "96.8% ANPR", (t_x + 20, t_y + 62), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 255), 1, cv2.LINE_AA)
 
-        # Crosshair reticle
-        cv2.drawMarker(img, (width // 2, height // 2), (0, 220, 255), cv2.MARKER_CROSS, 24, 1)
+    try:
+        while True:
+            frame_idx += 1
+            img = SentinelStreamManager.get_frame(cam, frame_idx, start_time)
 
-        # Top Tactical HUD Bar
-        cv2.rectangle(img, (0, 0), (width, 28), (10, 15, 25), -1)
-        cv2.line(img, (0, 28), (width, 28), (0, 200, 240), 1)
-        # Red REC dot
-        if (frame_idx // 12) % 2 == 0:
-            cv2.circle(img, (14, 14), 5, (0, 0, 255), -1)
-        cv2.putText(img, f"LIVE: {cam_code} | {cam_name[:32]}", (26, 18), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1, cv2.LINE_AA)
-        
-        # Bottom Status Bar with Hardware Monotonic PTS Timestamp
-        cv2.rectangle(img, (0, height - 26), (width, height), (10, 15, 25), -1)
-        cv2.line(img, (0, height - 26), (width, height - 26), (0, 180, 220), 1)
-        time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(curr_time))
-        cv2.putText(img, f"{time_str} | PTS: {pts_ms:.1f}ms | 25.0 FPS TCP", (10, height - 9), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (0, 230, 255), 1, cv2.LINE_AA)
-        cv2.putText(img, f"DEPT: {dept_name[:18]}", (width - 170, height - 9), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (160, 220, 160), 1, cv2.LINE_AA)
+            # Encode to JPEG
+            ret, jpeg = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 75])
+            if not ret:
+                await asyncio.sleep(0.04)
+                continue
 
-        # Encode to JPEG
-        ret, jpeg = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 75])
-        if not ret:
-            continue
-            
-        frame_bytes = jpeg.tobytes()
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-               
-        time.sleep(0.04) # 25 FPS stream delivery
+            frame_bytes = jpeg.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+            await asyncio.sleep(0.04) # 25 FPS stream delivery
+    except asyncio.CancelledError:
+        pass
+
 
 @router.get("/stream/{camera_id}")
-def stream_camera_mjpeg(
+@router.get("/api/stream/{camera_id}")
+async def stream_camera_mjpeg(
     camera_id: str,
     db: Session = Depends(get_db)
 ):
@@ -127,14 +239,53 @@ def stream_camera_mjpeg(
     Real-time browser fallback live video stream (MJPEG over HTTP).
     Supports all web browsers, Video Walls, and mobile terminals without plugins.
     """
-    cam = db.query(Camera).filter((Camera.id == camera_id) | (Camera.camera_code == camera_id)).first()
+    cam = db.query(Camera).filter(
+        (Camera.id == camera_id) |
+        (Camera.camera_code == camera_id) |
+        (Camera.camera_code.ilike(f"%{camera_id}%")) |
+        (Camera.name.ilike(f"%{camera_id}%"))
+    ).first()
     if not cam:
-        # Fallback to first camera if ID not found
         cam = db.query(Camera).first()
 
+    headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "Access-Control-Allow-Origin": "*"
+    }
     return StreamingResponse(
         generate_live_camera_mjpeg(cam),
-        media_type="multipart/x-mixed-replace; boundary=frame"
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers=headers
+    )
+
+@router.get("/stream/{camera_id}/snapshot")
+@router.get("/api/stream/{camera_id}/snapshot")
+async def get_camera_snapshot(
+    camera_id: str,
+    db: Session = Depends(get_db)
+):
+    """Returns a single live JPEG snapshot for high-density matrix walls."""
+    from fastapi.responses import Response
+    cam = db.query(Camera).filter(
+        (Camera.id == camera_id) |
+        (Camera.camera_code == camera_id) |
+        (Camera.camera_code.ilike(f"%{camera_id}%")) |
+        (Camera.name.ilike(f"%{camera_id}%"))
+    ).first()
+    if not cam:
+        cam = db.query(Camera).first()
+
+    # Generate live frame using real RTSP with fallback
+    frame_idx = int(time.time() * 25) % 10000
+    img = SentinelStreamManager.get_frame(cam, frame_idx, time.time() - 10)
+
+    _, buf = cv2.imencode(".jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 80])
+    return Response(
+        content=buf.tobytes(),
+        media_type="image/jpeg",
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Access-Control-Allow-Origin": "*"}
     )
 
 
@@ -150,6 +301,139 @@ def get_sentinel_ingest_catalog(
     """
     host = request.headers.get("host", "localhost:8000")
     return sentinel_catalog_service.get_catalog(db=db, host=host)
+
+from backend.config import settings
+from backend.services.sentinel_grid.corp8_syncer import fetch_corp8_cameras, sync_corp8_cameras_to_db
+
+@router.post("/api/sentinel/sync-external", response_model=ExternalSyncResponse)
+async def sync_external_catalog(
+    req: ExternalSyncRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Ingests live cameras from an external Sentinel Sandbox catalogue:
+    - If cctv.corp8.cloud: authenticates with email/password and syncs all 30 live cameras from /cameras.json
+    - If generic sandbox: pulls curl -s http://<host>/api/ingest
+    """
+    raw_url = req.sandbox_url.strip()
+
+    if "corp8.cloud" in raw_url or "cameras.json" in raw_url:
+        email = req.email or settings.SENTINEL_EMAIL
+        password = req.password or settings.SENTINEL_PASSWORD
+        cdn_host = "https://cctv.corp8.cloud"
+        try:
+            cams = await fetch_corp8_cameras(email=email, password=password, cdn_host=cdn_host)
+            synced_count, dept_names = sync_corp8_cameras_to_db(db=db, cameras=cams, email=email, password=password)
+            audit_service.log(
+                actor="sentinel_integrator",
+                action="SENTINEL_CORP8_CLOUD_SYNC",
+                target=cdn_host,
+                db=db,
+                result="SUCCESS"
+            )
+            return ExternalSyncResponse(
+                success=True,
+                message=f"Successfully authenticated and synced {synced_count} live Sentinel cameras from {cdn_host}",
+                synced_cameras=synced_count,
+                departments=dept_names,
+                source_url=cdn_host
+            )
+        except Exception as e:
+            count = db.query(Camera).count()
+            return ExternalSyncResponse(
+                success=False,
+                message=f"Sentinel Cloud sync error: {str(e)}. Operating with {count} active cameras.",
+                synced_cameras=count,
+                departments=["Home Department (Gujarat Police)", "GSRTC", "Health", "Panchayat", "Urban Development"],
+                source_url=cdn_host
+            )
+
+    target_url = raw_url.rstrip("/")
+    if not target_url.endswith("/api/ingest"):
+        target_url = f"{target_url}/api/ingest"
+
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.get(target_url)
+            if resp.status_code != 200:
+                raise HTTPException(status_code=400, detail=f"Failed to fetch catalogue from {target_url} (HTTP {resp.status_code})")
+            data = resp.json()
+    except Exception as e:
+        count = db.query(Camera).count()
+        return ExternalSyncResponse(
+            success=False,
+            message=f"Could not reach external sandbox at {target_url}: {str(e)}. Operating with {count} local cameras.",
+            synced_cameras=count,
+            departments=["Home Department (Gujarat Police)", "GSRTC", "Health", "Panchayat", "Urban Development"],
+            source_url=target_url
+        )
+
+    catalogue = data.get("catalogue", [])
+    dept_names = data.get("departments", [])
+    synced_count = 0
+
+    for item in catalogue:
+        code = item.get("camera_code") or f"CAM-{item.get('id')}"
+        cam = db.query(Camera).filter(Camera.camera_code == code).first()
+        if not cam:
+            dept_code = item.get("department_code") or "HOME-POLICE"
+            dept = db.query(Department).filter(Department.code == dept_code).first()
+            if not dept:
+                dept = Department(
+                    code=dept_code,
+                    name=item.get("department_name") or "Home Department (Gujarat Police)",
+                    jurisdiction="Gujarat State"
+                )
+                db.add(dept)
+                db.commit()
+                db.refresh(dept)
+
+            cam = Camera(
+                camera_code=code,
+                name=item.get("name") or f"Camera {code}",
+                department_id=dept.id,
+                latitude=item.get("latitude", 23.0225),
+                longitude=item.get("longitude", 72.5714),
+                address=item.get("address") or "Gujarat Sentinel Grid",
+                vendor="Gujarat Police Certified",
+                model=item.get("stream_properties", {}).get("codec", "H.264"),
+                source_type="DIRECT_RTSP",
+                protocol="RTSP",
+                status="ONLINE",
+                analytics_profile="ANPR",
+                retention_days=15
+            )
+            db.add(cam)
+            db.commit()
+            db.refresh(cam)
+
+            src = CameraSource(
+                camera_id=cam.id,
+                source_kind="SENTINEL",
+                endpoint=item.get("rtsp_url") or f"rtsp://localhost:8554/stream/{code.lower()}",
+                enabled=True
+            )
+            db.add(src)
+            db.commit()
+
+        synced_count += 1
+
+    audit_service.log(
+        actor="sentinel_integrator",
+        action="SENTINEL_EXTERNAL_CATALOG_SYNC",
+        target=target_url,
+        db=db,
+        result="SUCCESS"
+    )
+
+    return ExternalSyncResponse(
+        success=True,
+        message=f"Successfully ingested {synced_count} cameras from {target_url}",
+        synced_cameras=synced_count,
+        departments=dept_names,
+        source_url=target_url
+    )
 
 @router.post("/api/sentinel/validate-stream", response_model=StreamValidationResult)
 async def validate_stream(

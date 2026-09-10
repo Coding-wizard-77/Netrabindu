@@ -56,6 +56,27 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = "admin@police.gujarat.gov.in"
     ADMIN_DEPARTMENT: str = "DEPT-HQ"
 
+    # Sentinel Camera Grid (Gujarat Police 2026 Production Sandbox)
+    SENTINEL_EMAIL: str = "abhirajaaayush@gmail.com"
+    SENTINEL_PASSWORD: str = "J3FU-E89R-QBLD"
+    SENTINEL_PUBLIC_IP: str = "103.250.160.189"
+    SENTINEL_CDN_HOST: str = "https://cctv.corp8.cloud"
+    SENTINEL_RTSP_PORT: int = 8554
+    SENTINEL_WHEP_PORT: int = 8889
+
+    @property
+    def sentinel_encoded_email(self) -> str:
+        return self.SENTINEL_EMAIL.replace("@", "%40")
+
+    def get_sentinel_rtsp_url(self, camera_id: str) -> str:
+        return f"rtsp://{self.sentinel_encoded_email}:{self.SENTINEL_PASSWORD}@{self.SENTINEL_PUBLIC_IP}:{self.SENTINEL_RTSP_PORT}/stream/{camera_id}"
+
+    def get_sentinel_whep_url(self, camera_id: str) -> str:
+        return f"http://{self.sentinel_encoded_email}:{self.SENTINEL_PASSWORD}@{self.SENTINEL_PUBLIC_IP}:{self.SENTINEL_WHEP_PORT}/stream/{camera_id}/whep"
+
+    def get_sentinel_hls_url(self, camera_id: str) -> str:
+        return f"{self.SENTINEL_CDN_HOST}/{camera_id}/index.m3u8"
+
     @property
     def cors_origin_list(self) -> List[str]:
         return [x.strip() for x in self.CORS_ORIGINS.split(",") if x.strip()]

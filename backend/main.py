@@ -116,7 +116,7 @@ async def websocket_alerts(websocket: WebSocket):
         alert_ws_manager.disconnect(websocket)
 
 @app.get("/")
-def root():
+async def root():
     return {
         "platform": "Netrabindu CCTV Intelligence Platform",
         "tier": "backend",

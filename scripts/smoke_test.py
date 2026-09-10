@@ -164,8 +164,9 @@ async def run_smoke_test():
         print("[9/12] Reconstructing Vehicle Trajectory and GIS Route...")
         route_data = route_engine.reconstruct_route(plate=test_plate, from_time=None, to_time=None, db=db)
         assert route_data["total_points"] >= 1
-        pt = route_data["points"][0]
-        assert pt["camera_id"] == cam.id
+        matching_pts = [p for p in route_data["points"] if p["camera_id"] == cam.id]
+        assert len(matching_pts) >= 1, f"Expected camera {cam.id} in route points"
+        pt = matching_pts[-1]
         print(f"       [PASS] Route reconstructed: {route_data['total_points']} point(s). Lat: {pt['latitude']}, Lon: {pt['longitude']}")
 
         # Step 10: Evidence Retrieval

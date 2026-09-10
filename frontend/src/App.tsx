@@ -25,6 +25,7 @@ export const App: React.FC = () => {
         <Route path="sentinel-grid" element={<SentinelGridView />} />
         <Route path="cameras" element={<CameraRegistryView />} />
         <Route path="live" element={<LiveViewMatrixView />} />
+        <Route path="video-wall" element={<LiveViewMatrixView />} />
         <Route path="events" element={<EventsView />} />
         <Route path="investigation" element={<InvestigationView />} />
         <Route path="alerts" element={<AlertsView />} />

@@ -5,7 +5,7 @@ from typing import Optional, Tuple, Any
 
 # CRITICAL MANDATORY SPECIFICATION FROM GUJARAT POLICE INTEGRATOR'S GUIDE:
 # Force RTSP over TCP to survive NAT and corporate firewalls
-os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|stimeout;3000000"
 
 try:
     import cv2

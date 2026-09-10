@@ -13,14 +13,18 @@ class IngestCameraItem(BaseModel):
     id: str
     camera_code: str
     name: str
+    location: str # Descriptive location per Sentinel Guide specification
     department_code: str
     department_name: str
     latitude: float
     longitude: float
     address: str
+    live: bool = True # Boolean live status per Sentinel Guide specification
     live_status: str = "ONLINE"
+    codec: str = "H.264" # Codec (H.264 or H.265) per Sentinel Guide specification
     stream_properties: StreamProperties
     rtsp_url: str
+    whep_url: str
     hls_url: str
     stream_url: str # Browser playback fallback
 
@@ -30,6 +34,18 @@ class IngestCatalogResponse(BaseModel):
     catalogue: List[IngestCameraItem]
     timestamp: str
     sandbox_host: str
+
+class ExternalSyncRequest(BaseModel):
+    sandbox_url: str = "https://cctv.corp8.cloud"
+    email: Optional[str] = None
+    password: Optional[str] = None
+
+class ExternalSyncResponse(BaseModel):
+    success: bool
+    message: str
+    synced_cameras: int
+    departments: List[str]
+    source_url: str
 
 class StreamValidationRequest(BaseModel):
     camera_id: Optional[str] = None

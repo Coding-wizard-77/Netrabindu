@@ -59,6 +59,19 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User inactive or not found.")
     return user
 
+def get_optional_user(token: Optional[str] = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> Optional[User]:
+    if not token:
+        return None
+    try:
+        payload = decode_access_token(token)
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+        return db.query(User).filter(User.id == user_id, User.status == "ACTIVE").first()
+    except Exception:
+        return None
+
+
 def require_role(allowed_roles: List[str]):
     """Decorator / dependency to enforce RBAC permissions."""
     def role_checker(current_user: User = Depends(get_current_user)) -> User:

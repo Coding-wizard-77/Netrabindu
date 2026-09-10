@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from sqlalchemy.orm import Session
 from backend.database import get_db
-from backend.dependencies import get_current_user, require_role, verify_department_scope
+from backend.dependencies import get_current_user, get_optional_user, require_role, verify_department_scope
 from backend.services.camera_registry.models import Camera, CameraSource, User
 from backend.services.camera_registry.schemas import (
     CameraCreate, CameraOut, CameraDetailOut, CameraImportResult, ONVIFDiscoverRequest
@@ -78,12 +78,13 @@ def list_cameras(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_optional_user)
 ):
-    # Enforce department scope
-    user_roles = [r.name.upper() for r in current_user.roles]
-    if "SUPER_ADMIN" not in user_roles and current_user.department_id:
-        department_id = current_user.department_id
+    # Enforce department scope if logged in
+    if current_user:
+        user_roles = [r.name.upper() for r in current_user.roles]
+        if "SUPER_ADMIN" not in user_roles and current_user.department_id:
+            department_id = current_user.department_id
 
     cameras, total = camera_registry_service.list_cameras(
         db=db,

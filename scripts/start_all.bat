@@ -7,13 +7,15 @@ echo 2. Frontend Command Center (React, Port 3000)
 echo 3. Edge AI Vision Inference Engine (Worker)
 echo ======================================================================
 
-start "NetraBindu Backend API" cmd /k "cd /d %~dp0 && call start_backend.bat"
-timeout /t 2 /nobreak >nul
+cd /d "%~dp0"
 
-start "NetraBindu Frontend UI" cmd /k "cd /d %~dp0 && call start_frontend.bat"
-timeout /t 2 /nobreak >nul
+start "NetraBindu Backend API" cmd /k "call start_backend.bat"
+timeout /t 2 /nobreak >nul 2>&1 || ping -n 3 127.0.0.1 >nul
 
-start "NetraBindu Edge AI Engine" cmd /k "cd /d %~dp0 && call start_ai_engine.bat"
+start "NetraBindu Frontend UI" cmd /k "call start_frontend.bat"
+timeout /t 2 /nobreak >nul 2>&1 || ping -n 3 127.0.0.1 >nul
+
+start "NetraBindu Edge AI Engine" cmd /k "call start_ai_engine.bat"
 
 echo.
 echo All 3 tiers have been launched in separate tactical consoles.

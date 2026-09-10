@@ -19,6 +19,7 @@ export interface IngestCameraItem {
     pts_timing_valid: boolean;
   };
   rtsp_url: string;
+  whep_url: string;
   hls_url: string;
   stream_url: string;
 }
@@ -126,6 +127,13 @@ export const sentinelApi = {
 
   async getOutputReport(plate: string): Promise<HackathonOutputReport> {
     const res = await apiClient.get(`/vehicles/${encodeURIComponent(plate)}/report`);
+    return res.data;
+  },
+
+  async syncExternalCatalog(sandboxUrl: string): Promise<{ success: boolean; message: string; synced_cameras: number; departments: string[]; source_url: string }> {
+    const res = await apiClient.post('/sentinel/sync-external', {
+      sandbox_url: sandboxUrl,
+    });
     return res.data;
   },
 };

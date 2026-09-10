@@ -29,12 +29,21 @@ export const SentinelGridView: React.FC = () => {
   const [selectedDept, setSelectedDept] = useState<string>('ALL');
   const [sandboxHost, setSandboxHost] = useState<string>('http://localhost:8000');
   const [loading, setLoading] = useState<boolean>(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [cameras, setCameras] = useState<IngestCameraItem[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [probeResult, setProbeResult] = useState<StreamValidationResult | null>(null);
   const [selectedCam, setSelectedCam] = useState<IngestCameraItem | null>(null);
   const [reportModalOpen, setReportModalOpen] = useState<boolean>(false);
   const [copiedCurl, setCopiedCurl] = useState<boolean>(false);
+  const [copiedLabel, setCopiedLabel] = useState<string | null>(null);
+
+  const handleCopyText = (text: string, label: string) => {
+    tacticalAudio.playKeyClick();
+    navigator.clipboard.writeText(text);
+    setCopiedLabel(label);
+    setTimeout(() => setCopiedLabel(null), 2000);
+  };
 
   const fetchSentinelData = async () => {
     setLoading(true);
@@ -56,6 +65,24 @@ export const SentinelGridView: React.FC = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSyncExternal = async () => {
+    tacticalAudio.playKeyClick();
+    setLoading(true);
+    setSyncMessage(null);
+    try {
+      const res = await sentinelApi.syncExternalCatalog(sandboxHost);
+      setSyncMessage(res.message);
+      await fetchSentinelData();
+      tacticalAudio.playRadioChirp();
+    } catch (err: any) {
+      setSyncMessage(`Sync status: ${err.message || 'Updated from local grid'}`);
+      await fetchSentinelData();
+    } finally {
+      setLoading(false);
+      setTimeout(() => setSyncMessage(null), 6000);
     }
   };
 
@@ -139,15 +166,66 @@ export const SentinelGridView: React.FC = () => {
             Evaluation Output Report (GJ01AB1234)
           </button>
           <button
-            onClick={fetchSentinelData}
+            onClick={handleSyncExternal}
             disabled={loading}
-            className="px-3.5 py-2 rounded-xl bg-navy-900 hover:bg-navy-800 text-slate-200 hover:text-white text-xs font-bold border border-navy-700 flex items-center gap-2 transition-all"
+            className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold border border-cyan-500/40 shadow-glow-cyan flex items-center gap-2 transition-all"
+            title="Ingests catalogue from target sandbox host"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Sync Feeds
+            Sync Feeds from Host
           </button>
         </div>
       </div>
+
+      {/* Live Production Sentinel Cloud & Authentication Credentials Banner */}
+      <div className="p-4 rounded-xl bg-gradient-to-r from-blue-950/70 via-navy-950/90 to-slate-950/80 border border-cyan-500/40 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-glass-elevated">
+        <div className="flex items-start gap-3">
+          <ShieldAlert className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-black text-white text-xs tracking-wider">OFFICIAL SENTINEL PRODUCTION GATEWAY</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/40">
+                ACTIVE PARTICIPANT ACCESS
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-300 leading-relaxed flex flex-wrap items-center gap-x-3 gap-y-1 font-mono">
+              <span>Account: <strong className="text-cyan-300">abhirajaaayush@gmail.com</strong></span>
+              <span>&bull;</span>
+              <span>Direct RTSP: <strong className="text-emerald-300">103.250.160.189:8554</strong></span>
+              <span>&bull;</span>
+              <span>WHEP: <strong className="text-emerald-300">103.250.160.189:8889</strong></span>
+              <span>&bull;</span>
+              <span>HLS CDN: <strong className="text-cyan-300">cctv.corp8.cloud</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              setSandboxHost('https://cctv.corp8.cloud');
+              handleSyncExternal();
+            }}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-glow-cyan"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Sync 30 Live Cloud Cams
+          </button>
+        </div>
+      </div>
+
+      {syncMessage && (
+        <div className="p-3.5 rounded-xl bg-cyan-950/60 border border-cyan-500/50 text-cyan-200 text-xs flex items-center justify-between animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{syncMessage}</span>
+          </div>
+          <button onClick={() => setSyncMessage(null)} className="text-slate-400 hover:text-white text-xs font-bold">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {/* Primary Navigation Tabs */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 glass-panel rounded-2xl border border-navy-800 text-xs">
@@ -213,8 +291,30 @@ export const SentinelGridView: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 px-2">
-          <span className="text-[11px] text-slate-400">Sandbox Host:</span>
+        <div className="flex items-center gap-2 px-2 flex-wrap">
+          <span className="text-[11px] text-slate-400">Target Host:</span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setSandboxHost('https://cctv.corp8.cloud')}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                sandboxHost.includes('corp8')
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                  : 'bg-navy-950 text-slate-400 hover:text-white border border-navy-800'
+              }`}
+            >
+              Live Cloud
+            </button>
+            <button
+              onClick={() => setSandboxHost('http://localhost:8000')}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${
+                sandboxHost.includes('localhost')
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  : 'bg-navy-950 text-slate-400 hover:text-white border border-navy-800'
+              }`}
+            >
+              Local Hub
+            </button>
+          </div>
           <input
             type="text"
             value={sandboxHost}
@@ -485,9 +585,48 @@ export const SentinelGridView: React.FC = () => {
                     <span className="text-slate-500">TRANSPORT:</span>
                     <span className="text-cyan-400 font-bold uppercase">{cam.stream_properties.transport}</span>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block">RTSP URI:</span>
-                    <span className="text-slate-300 break-all">{cam.rtsp_url}</span>
+                  <div className="pt-1 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-500">1. RTSP (TCP):</span>
+                      <button
+                        onClick={() => handleCopyText(cam.rtsp_url, `rtsp-${cam.id}`)}
+                        className="text-cyan-400 hover:text-cyan-300 text-[9px] flex items-center gap-1 font-bold"
+                      >
+                        <Copy className="w-2.5 h-2.5" />
+                        {copiedLabel === `rtsp-${cam.id}` ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <div className="text-slate-300 break-all bg-black/40 px-1.5 py-0.5 rounded font-mono text-[9px]">
+                      {cam.rtsp_url}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-0.5">
+                      <span className="text-slate-500">2. WHEP (WebRTC):</span>
+                      <button
+                        onClick={() => handleCopyText(cam.whep_url || `http://localhost:8889/stream/${cam.id}/whep`, `whep-${cam.id}`)}
+                        className="text-cyan-400 hover:text-cyan-300 text-[9px] flex items-center gap-1 font-bold"
+                      >
+                        <Copy className="w-2.5 h-2.5" />
+                        {copiedLabel === `whep-${cam.id}` ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <div className="text-slate-300 break-all bg-black/40 px-1.5 py-0.5 rounded font-mono text-[9px]">
+                      {cam.whep_url || `http://localhost:8889/stream/${cam.id}/whep`}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-0.5">
+                      <span className="text-slate-500">3. HLS (M3U8):</span>
+                      <button
+                        onClick={() => handleCopyText(cam.hls_url, `hls-${cam.id}`)}
+                        className="text-cyan-400 hover:text-cyan-300 text-[9px] flex items-center gap-1 font-bold"
+                      >
+                        <Copy className="w-2.5 h-2.5" />
+                        {copiedLabel === `hls-${cam.id}` ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <div className="text-slate-300 break-all bg-black/40 px-1.5 py-0.5 rounded font-mono text-[9px]">
+                      {cam.hls_url}
+                    </div>
                   </div>
                 </div>
 
@@ -531,6 +670,75 @@ export const SentinelGridView: React.FC = () => {
             </p>
             <div className="p-3 bg-navy-950 rounded-xl font-mono text-xs text-purple-300 border border-navy-800 select-all">
               curl -s {sandboxHost}/api/ingest
+            </div>
+          </div>
+
+          {/* Section 1: Protocols Table */}
+          <div className="p-5 rounded-2xl glass-panel border border-navy-800 space-y-3">
+            <h4 className="font-bold text-white text-xs uppercase tracking-wider text-cyan-400">
+              Section 1 &mdash; What You Are Connecting To (Protocol Endpoints)
+            </h4>
+            <div className="overflow-x-auto rounded-xl border border-navy-800">
+              <table className="w-full text-left text-xs font-mono">
+                <thead>
+                  <tr className="bg-navy-950 text-slate-400 border-b border-navy-800">
+                    <th className="p-3 w-1/5">Protocol</th>
+                    <th className="p-3 w-1/2">Endpoint Pattern</th>
+                    <th className="p-3 w-3/10">Intended For</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-navy-850">
+                  <tr className="hover:bg-navy-900/40">
+                    <td className="p-3 font-bold text-cyan-300">RTSP</td>
+                    <td className="p-3 text-emerald-300">rtsp://&lt;host&gt;:8554/stream/&lt;id&gt;</td>
+                    <td className="p-3 text-slate-300">AI inference (OpenCV, GStreamer, FFmpeg, DeepStream)</td>
+                  </tr>
+                  <tr className="hover:bg-navy-900/40">
+                    <td className="p-3 font-bold text-cyan-300">WebRTC (WHEP)</td>
+                    <td className="p-3 text-amber-300">http://&lt;host&gt;:8889/stream/&lt;id&gt;/whep</td>
+                    <td className="p-3 text-slate-300">Low-latency browser preview</td>
+                  </tr>
+                  <tr className="hover:bg-navy-900/40">
+                    <td className="p-3 font-bold text-cyan-300">HLS</td>
+                    <td className="p-3 text-purple-300">http://&lt;host&gt;/live/stream/&lt;id&gt;/index.m3u8</td>
+                    <td className="p-3 text-slate-300">Dashboards, mobile, restricted networks</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Section 2: Code Snippets */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl glass-panel border border-navy-800 space-y-2">
+              <span className="text-xs font-bold text-emerald-400 block">Section 2 &mdash; OpenCV (Python) Reference</span>
+              <pre className="p-3 bg-navy-950 rounded-xl text-[11px] font-mono text-slate-300 overflow-x-auto border border-navy-850">
+{`import os
+# Rule 1: MANDATORY - Force RTSP over TCP
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
+import cv2
+
+cap = cv2.VideoCapture("rtsp://<host>:8554/stream/1", cv2.CAP_FFMPEG)
+while True:
+    ok, frame = cap.read()
+    if not ok:
+        break # Reconnect with exponential backoff (2s -> 30s)
+    # Rule 2: NEVER use CAP_PROP_FPS; use monotonic PTS
+    pts_ms = cap.get(cv2.CAP_PROP_POS_MSEC)`}
+              </pre>
+            </div>
+
+            <div className="p-4 rounded-2xl glass-panel border border-navy-800 space-y-2">
+              <span className="text-xs font-bold text-cyan-400 block">Section 2 &mdash; GStreamer &amp; FFmpeg Reference</span>
+              <pre className="p-3 bg-navy-950 rounded-xl text-[11px] font-mono text-slate-300 overflow-x-auto border border-navy-850">
+{`# GStreamer (TCP forced, low latency buffer):
+gst-launch-1.0 rtspsrc location=rtsp://<host>:8554/stream/1 \\
+  protocols=tcp latency=200 ! rtph264depay ! h264parse ! \\
+  avdec_h264 ! videoconvert ! fakesink
+
+# FFplay (TCP forced):
+ffplay -rtsp_transport tcp rtsp://<host>:8554/stream/1`}
+              </pre>
             </div>
           </div>
 
