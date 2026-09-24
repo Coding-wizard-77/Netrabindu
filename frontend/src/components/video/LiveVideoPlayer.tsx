@@ -21,6 +21,14 @@ import {
 import { Camera } from '../../types';
 import { tacticalAudio } from '../../utils/audio';
 
+export interface LiveVideoPlayerAnomaly {
+  type: string;
+  severity: string;
+  description?: string;
+  confidence?: number;
+  thumbnail_uri?: string;
+}
+
 export interface LiveVideoPlayerProps {
   camera?: Camera;
   streamUrl?: string;
@@ -32,6 +40,7 @@ export interface LiveVideoPlayerProps {
   detectedPlate?: string;
   confidence?: number;
   adaptiveMode?: 'idle' | 'motion' | 'critical';
+  activeAnomaly?: LiveVideoPlayerAnomaly;
   compact?: boolean;
   onSnapshot?: (dataUrl: string) => void;
   onInspect?: () => void;
@@ -50,6 +59,7 @@ export const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
   detectedPlate,
   confidence = 96.8,
   adaptiveMode = 'critical',
+  activeAnomaly,
   compact = true,
   onSnapshot,
   onInspect,
@@ -209,8 +219,12 @@ export const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
         ref={containerRef}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`relative w-full h-full min-h-[140px] flex flex-col bg-slate-950 overflow-hidden group select-none ${
-          isSelected ? 'ring-2 ring-cyan-400 shadow-glow-cyan' : ''
+        className={`relative w-full h-full min-h-[140px] flex flex-col bg-slate-950 overflow-hidden group select-none transition-all duration-300 ${
+          activeAnomaly
+            ? 'ring-2 ring-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.6)] animate-pulse'
+            : isSelected
+            ? 'ring-2 ring-cyan-400 shadow-glow-cyan'
+            : ''
         }`}
       >
         {/* Live Video Stream */}
@@ -255,8 +269,21 @@ export const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
             <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-cyan-400"></div>
           </div>
 
+          {/* Active Anomaly Flashing HUD Banner */}
+          {activeAnomaly && (
+            <div className="absolute top-0 inset-x-0 z-30 bg-rose-600/95 text-white px-2 py-1 flex items-center justify-between text-[10px] font-mono font-bold shadow-lg animate-pulse pointer-events-none">
+              <div className="flex items-center gap-1.5 truncate">
+                <ShieldAlert className="w-3.5 h-3.5 text-yellow-300 shrink-0 animate-bounce" />
+                <span className="truncate">{activeAnomaly.type.replace(/_/g, ' ')}</span>
+              </div>
+              <span className="bg-black/50 px-1.5 py-0.2 rounded text-[9px] text-yellow-300 uppercase shrink-0">
+                {activeAnomaly.severity}
+              </span>
+            </div>
+          )}
+
           {/* Top Sleek Telemetry Header Bar */}
-          <div className="absolute top-2 left-2 right-2 flex items-center justify-between z-20 pointer-events-none">
+          <div className={`absolute left-2 right-2 flex items-center justify-between z-20 pointer-events-none ${activeAnomaly ? 'top-7' : 'top-2'}`}>
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md border border-slate-700/60 shadow-md">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -342,7 +369,9 @@ export const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative flex flex-col overflow-hidden rounded-xl border border-navy-700 bg-black shadow-2xl ${
+      className={`relative flex flex-col overflow-hidden rounded-xl border bg-black shadow-2xl transition-all duration-300 ${
+        activeAnomaly ? 'border-rose-500 ring-2 ring-rose-500 shadow-[0_0_30px_rgba(244,63,94,0.4)]' : 'border-navy-700'
+      } ${
         isFullscreen ? 'h-screen w-screen rounded-none z-50' : 'h-full min-h-[380px]'
       }`}
     >
@@ -379,8 +408,21 @@ export const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
           <Crosshair className="h-24 w-24 text-accent-cyan" />
         </div>
 
+        {/* Expanded Tactical Anomaly Alert Banner */}
+        {activeAnomaly && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-rose-600/90 border border-rose-400 text-white px-4 py-1.5 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3 animate-pulse">
+            <ShieldAlert className="w-5 h-5 text-yellow-300 animate-bounce" />
+            <div className="text-xs font-mono font-black tracking-wider uppercase">
+              CRITICAL ANOMALY: {activeAnomaly.type.replace(/_/g, ' ')}
+            </div>
+            <span className="px-2 py-0.5 rounded bg-black/60 text-yellow-300 text-[10px] font-mono font-bold">
+              {activeAnomaly.severity} PRIORITY
+            </span>
+          </div>
+        )}
+
         {/* Top Tactical HUD Bar */}
-        <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20 pointer-events-auto">
+        <div className={`absolute left-3 right-3 flex items-center justify-between z-20 pointer-events-auto ${activeAnomaly ? 'top-14' : 'top-3'}`}>
           <div className="flex items-center space-x-2 bg-black/75 backdrop-blur-md rounded-lg px-3 py-1.5 border border-navy-700 shadow-xl">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

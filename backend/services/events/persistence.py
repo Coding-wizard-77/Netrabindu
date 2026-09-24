@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from backend.services.camera_registry.models import DetectionEvent, VehicleRead, Camera
 from backend.services.watchlist.normalizer import normalize_plate
 from backend.services.correlation.engine import correlation_engine
+from backend.services.alerts.service import alert_service
 from backend.services.events.bus import event_bus
 
 logger = logging.getLogger(__name__)
@@ -88,12 +89,29 @@ class EventPersistenceService:
         db.commit()
         db.refresh(detection)
 
-        # Route through correlation and watchlist matching
+        # Route through correlation and watchlist matching for ANPR
         correlation_result = await correlation_engine.process_detection_event(detection, db)
+
+        # If ANOMALY event, directly trigger immediate emergency alert
+        if event_type == "ANOMALY":
+            anom_type = identifier.get("normalized") or "TRAFFIC_ANOMALY"
+            severity = identifier.get("severity") or "HIGH"
+            notes = identifier.get("description") or f"Anomaly {anom_type} detected on camera {camera.camera_code}"
+            try:
+                await alert_service.create_alert(
+                    event_id=event_id,
+                    entity_id=camera_id,
+                    severity=severity,
+                    notes=notes,
+                    db=db
+                )
+                logger.info(f"[AnomalyAlertCreated] Event {event_id} -> {anom_type} ({severity}) on {camera.camera_code}")
+            except Exception as ex:
+                logger.warning(f"Could not create alert for anomaly event {event_id}: {ex}")
 
         # Publish to downstream event bus
         await event_bus.publish(
-            topic="anpr.events",
+            topic="anpr.events" if event_type == "ANPR" else "anomaly.events",
             key=norm_plate or camera_id,
             value=payload
         )
@@ -101,7 +119,7 @@ class EventPersistenceService:
         return {
             "status": "PERSISTED",
             "event_id": event_id,
-            "correlated": correlation_result is not None
+            "correlated": correlation_result is not None or event_type == "ANOMALY"
         }
 
 event_persistence = EventPersistenceService()

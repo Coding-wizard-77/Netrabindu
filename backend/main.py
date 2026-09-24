@@ -70,6 +70,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+import os
+from fastapi.staticfiles import StaticFiles
+
+# Mount Static Evidence Directory for forensic image display
+evidence_dir = os.path.join(backend_dir, "evidence")
+os.makedirs(os.path.join(evidence_dir, "anomalies"), exist_ok=True)
+app.mount("/evidence", StaticFiles(directory=evidence_dir), name="evidence")
+
 # Mount Routers
 app.include_router(auth.router)
 app.include_router(departments.router)

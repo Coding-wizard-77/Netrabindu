@@ -14,6 +14,7 @@ except ImportError:
 from ai_models.config import ai_config
 from ai_models.pipeline.video_decoder import VideoDecoder
 from ai_models.pipeline.inference_pipeline import inference_pipeline
+from ai_models.pipeline.anomaly_pipeline import anomaly_pipeline
 from ai_models.publisher.event_publisher import event_publisher
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] [SENTINEL_INGEST]: %(message)s")
@@ -126,6 +127,37 @@ class SentinelGridIngestor:
 
             # Publish event to backend
             await event_publisher.publish_detection(event)
+
+            # Inspect frame for real-time traffic & security anomalies
+            if frame is not None:
+                simulated_objects = []
+                # Inject realistic anomaly scenarios periodically for live verification
+                if seq % 3 == 0:
+                    simulated_objects.append({
+                        "class_name": "vehicle",
+                        "track_id": f"TRK-{random.randint(100, 999)}",
+                        "bbox": (0.35, 0.45, 0.65, 0.75),
+                        "confidence": 0.94
+                    })
+                elif seq % 5 == 0:
+                    simulated_objects.append({
+                        "class_name": "person",
+                        "track_id": f"PED-{random.randint(10, 99)}",
+                        "bbox": (0.42, 0.60, 0.48, 0.85),
+                        "confidence": 0.91
+                    })
+
+                anomaly_pipeline.process_camera_frame(
+                    frame=frame,
+                    camera_id=cam.get("id", "cam-01"),
+                    camera_code=cam.get("camera_code", "GJ-POL-CAM-01"),
+                    camera_name=cam.get("name", "Gujarat Surveillance Node"),
+                    lat=cam.get("latitude", 23.0330),
+                    lon=cam.get("longitude", 72.5120),
+                    tracked_objects=simulated_objects,
+                    pts_ms=pts_ms,
+                    corridor_heading_deg=90.0
+                )
 
             # Interval between detections
             await asyncio.sleep(random.uniform(4.0, 8.0))

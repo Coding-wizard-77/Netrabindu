@@ -8,9 +8,10 @@ import { Plus, GripVertical, ArrowLeftRight, Move } from 'lucide-react';
 interface VideoWallGridProps {
   onSlotClick?: (index: number) => void;
   onInspectCamera?: (camera: Camera) => void;
+  activeAnomalies?: Record<string, { type: string; severity: string; description?: string }>;
 }
 
-export const VideoWallGrid: React.FC<VideoWallGridProps> = ({ onSlotClick, onInspectCamera }) => {
+export const VideoWallGrid: React.FC<VideoWallGridProps> = ({ onSlotClick, onInspectCamera, activeAnomalies = {} }) => {
   const {
     layout,
     slots,
@@ -157,6 +158,7 @@ export const VideoWallGrid: React.FC<VideoWallGridProps> = ({ onSlotClick, onIns
                 camera={camera}
                 compact={!isMasterSlot}
                 isSelected={selectedSlotIndex === index}
+                activeAnomaly={activeAnomalies[camera.id] || activeAnomalies[camera.camera_code] || activeAnomalies[(camera as any).code]}
                 onInspect={() => onInspectCamera && onInspectCamera(camera)}
                 onRemove={() => assignCameraToSlot(index, null)}
               />

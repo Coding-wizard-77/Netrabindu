@@ -52,20 +52,23 @@ class AlertService:
         camera = db.query(Camera).filter(Camera.id == event.camera_id).first() if event else None
         entity = db.query(WatchlistEntity).filter(WatchlistEntity.id == entity_id).first()
 
+        anom_label = "TRAFFIC ANOMALY"
+        if event and event.event_type == "ANOMALY":
+            anom_label = event.identifier.get("normalized", "ANOMALY") if isinstance(event.identifier, dict) else "ANOMALY"
+
         alert_payload = {
             "id": alert.id,
             "event_id": event_id,
             "entity_id": entity_id,
-            "entity_identifier": entity.identifier if entity else "Unknown",
-            "watchlist_category": entity.category if entity else "General",
-            "severity": alert.severity,
-            "state": alert.state,
-            "notes": alert.notes,
+            "entity_identifier": entity.identifier if entity else anom_label,
+            "watchlist_category": entity.category if entity else "TRAFFIC_ANOMALY",
+            "severity": severity,
+            "state": "NEW",
+            "notes": notes,
             "camera_id": camera.id if camera else None,
-            "camera_name": camera.name if camera else "Unknown Camera",
-            "latitude": camera.latitude if camera else (event.latitude if event else None),
-            "longitude": camera.longitude if camera else (event.longitude if event else None),
-            "occurred_at": event.occurred_at.isoformat() if event else None,
+            "camera_name": camera.name if camera else "Gujarat Grid Camera",
+            "camera_code": camera.camera_code if camera else "CAM-01",
+            "department_name": camera.department.name if (camera and camera.department) else "Police Grid",
             "created_at": alert.created_at.isoformat(),
             "evidence": event.evidence_ref if event else {}
         }

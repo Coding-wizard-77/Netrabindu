@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera } from '../types';
 import { camerasApi } from '../api/cameras';
 import { sentinelApi, IngestCameraItem } from '../api/sentinel';
+import { wsManager } from '../api/websocket';
+import { useAlertStore } from '../store/useAlertStore';
 import { VideoWallGrid } from '../components/video/VideoWallGrid';
 import { LiveVideoPlayer } from '../components/video/LiveVideoPlayer';
 import { useVideoWallStore, GridLayout, getLayoutSlotCount } from '../store/useVideoWallStore';
@@ -54,6 +56,8 @@ export const LiveViewMatrixView: React.FC = () => {
   const [inspectCamera, setInspectCamera] = useState<Camera | null>(null);
   const [search, setSearch] = useState<string>('');
   const [deptFilter, setDeptFilter] = useState<string>('ALL');
+  const [activeAnomalies, setActiveAnomalies] = useState<Record<string, { type: string; severity: string; description?: string }>>({});
+  const { addLiveAlert } = useAlertStore();
 
   // Draggable Floating Inspection Deck state
   const [deckPos, setDeckPos] = useState<{ x: number; y: number }>({ x: 80, y: 70 });
@@ -74,6 +78,72 @@ export const LiveViewMatrixView: React.FC = () => {
     setSelectedSlotIndex, 
     clearWall 
   } = useVideoWallStore();
+
+  // Subscribe to real-time anomaly events and alerts
+  useEffect(() => {
+    const unsubAlerts = wsManager.subscribe('alerts', (msg) => {
+      const payload = msg.payload;
+      if (!payload) return;
+      
+      // If it's an anomaly alert, update activeAnomalies map
+      if (payload.watchlist_category === 'TRAFFIC_ANOMALY' || payload.entity_identifier?.includes('ANOMALY') || payload.notes?.includes('Anomaly')) {
+        const camKey = payload.camera_id || payload.camera_code;
+        if (camKey) {
+          setActiveAnomalies((prev) => ({
+            ...prev,
+            [camKey]: {
+              type: payload.entity_identifier || 'TRAFFIC_ANOMALY',
+              severity: payload.severity || 'CRITICAL',
+              description: payload.notes,
+            }
+          }));
+
+          // Clear anomaly after 30 seconds
+          setTimeout(() => {
+            setActiveAnomalies((prev) => {
+              const updated = { ...prev };
+              delete updated[camKey];
+              return updated;
+            });
+          }, 30000);
+        }
+      }
+      
+      // Also register into alert store
+      if (payload.id) {
+        addLiveAlert(payload);
+      }
+    });
+
+    const unsubAnomaly = wsManager.subscribe('anomaly.events', (msg) => {
+      const payload = msg.payload;
+      if (!payload) return;
+      const camKey = payload.camera_id;
+      if (camKey) {
+        setActiveAnomalies((prev) => ({
+          ...prev,
+          [camKey]: {
+            type: payload.identifier?.normalized || 'TRAFFIC_ANOMALY',
+            severity: payload.pipeline?.inference_tier || 'CRITICAL',
+            description: payload.identifier?.raw,
+          }
+        }));
+
+        setTimeout(() => {
+          setActiveAnomalies((prev) => {
+            const updated = { ...prev };
+            delete updated[camKey];
+            return updated;
+          });
+        }, 30000);
+      }
+    });
+
+    return () => {
+      unsubAlerts();
+      unsubAnomaly();
+    };
+  }, [addLiveAlert]);
 
   useEffect(() => {
     async function loadCameras() {
@@ -281,6 +351,7 @@ export const LiveViewMatrixView: React.FC = () => {
       {/* Multi-Grid Matrix with Drag-and-Drop */}
       <div className="flex-1 w-full min-h-0">
         <VideoWallGrid 
+          activeAnomalies={activeAnomalies}
           onSlotClick={(index) => {
             setSelectedSlotIndex(index);
             if (!slots[index]) {
@@ -470,6 +541,7 @@ export const LiveViewMatrixView: React.FC = () => {
               detectedPlate="GJ01AB1234"
               confidence={98.2}
               adaptiveMode="critical"
+              activeAnomaly={inspectCamera ? (activeAnomalies[inspectCamera.id] || activeAnomalies[inspectCamera.camera_code]) : undefined}
             />
           </div>
 
