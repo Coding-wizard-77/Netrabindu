@@ -23,7 +23,7 @@ try:
     from backend.services.events.bus import event_bus
     from backend.services.alerts.ws_manager import alert_ws_manager
     from backend.routers import (
-        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations, sentinel_grid
+        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations, sentinel_grid, evidence
     )
     from backend.seed_data import seed_all_data
 except ImportError:
@@ -33,7 +33,7 @@ except ImportError:
     from services.events.bus import event_bus
     from services.alerts.ws_manager import alert_ws_manager
     from routers import (
-        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations, sentinel_grid
+        auth, departments, cameras, events, vehicles, watchlists, alerts, health, metrics, audit, integrations, sentinel_grid, evidence
     )
     from seed_data import seed_all_data
 
@@ -98,11 +98,6 @@ app.add_middleware(
 import os
 from fastapi.staticfiles import StaticFiles
 
-# Mount Static Evidence Directory for forensic image display
-evidence_dir = os.path.join(backend_dir, "evidence")
-os.makedirs(os.path.join(evidence_dir, "anomalies"), exist_ok=True)
-app.mount("/evidence", StaticFiles(directory=evidence_dir), name="evidence")
-
 # Mount Routers
 app.include_router(auth.router)
 app.include_router(departments.router)
@@ -116,6 +111,12 @@ app.include_router(metrics.router)
 app.include_router(audit.router)
 app.include_router(integrations.router)
 app.include_router(sentinel_grid.router)
+app.include_router(evidence.router)
+
+# Mount Static Evidence Directory for forensic image display
+evidence_dir = os.path.join(backend_dir, "evidence")
+os.makedirs(os.path.join(evidence_dir, "anomalies"), exist_ok=True)
+app.mount("/evidence", StaticFiles(directory=evidence_dir), name="evidence")
 
 @app.websocket("/ws/events")
 async def websocket_events(websocket: WebSocket):

@@ -19,16 +19,24 @@ export const LiveEventStream: React.FC<LiveEventStreamProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<DetectionEvent | null>(null);
 
+  const isValidPlate = (p?: string) => {
+    if (!p) return false;
+    const clean = p.trim().toUpperCase();
+    return clean !== 'UNKNOWN' && clean !== 'UNDEFINED' && clean.length >= 4 && !clean.includes('ANOMALY');
+  };
+
   useEffect(() => {
-    if (initialEvents.length > 0 && events.length === 0) {
-      setEvents(initialEvents);
-    }
+    setEvents(initialEvents.filter((e) => isValidPlate(e.identifier?.normalized || e.identifier?.raw)));
   }, [initialEvents]);
 
   useEffect(() => {
     const unsub = wsManager.subscribe('anpr.events', (msg) => {
       if (!isPaused && msg.payload) {
-        setEvents((prev) => [msg.payload, ...prev.slice(0, maxEvents - 1)]);
+        const payload = msg.payload;
+        const plate = payload.identifier?.normalized || payload.identifier?.raw;
+        if (isValidPlate(plate)) {
+          setEvents((prev) => [payload, ...prev.slice(0, maxEvents - 1)]);
+        }
       }
     });
 

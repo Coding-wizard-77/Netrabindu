@@ -2,11 +2,11 @@ import { apiClient } from './client';
 import { Alert, AlertState, AlertSeverity } from '../types';
 
 function normalizeAlert(a: any): Alert {
-  const target = a.entity_identifier || a.target_identifier || 'GJ01AB1234';
+  const target = a.entity_identifier || a.target_identifier || a.detected_identifier || '';
   return {
     id: a.id,
     event_id: a.event_id || a.id,
-    entity_id: a.entity_id,
+    entity_id: a.entity_id || a.id,
     severity: (a.severity || 'HIGH') as AlertSeverity,
     state: (a.state || 'NEW') as AlertState,
     watchlist_category: a.watchlist_category || 'SUSPECT_TARGET',
@@ -14,9 +14,9 @@ function normalizeAlert(a: any): Alert {
     detected_identifier: a.detected_identifier || target,
     confidence: a.confidence || 0.96,
     camera_id: a.camera_id || 'cam-01',
-    camera_name: a.camera_name || 'Traffic Junction Camera',
-    camera_code: a.camera_code || 'CAM-HQ-01',
-    department_name: a.department_name || 'Gujarat Police Traffic Branch',
+    camera_name: a.camera_name || a.camera_code || 'Gujarat Police Corridor Node',
+    camera_code: a.camera_code || a.camera_id || 'GJ-POL-CAM-01',
+    department_name: a.department_name || 'Home Department (Gujarat Police)',
     location: {
       lat: a.latitude || a.location?.lat || 23.0225,
       lon: a.longitude || a.location?.lon || 72.5714,
@@ -29,7 +29,7 @@ function normalizeAlert(a: any): Alert {
     operator_notes: a.notes || a.operator_notes,
     assigned_unit: a.dispatch_unit || a.assigned_unit,
     evidence: a.evidence || {},
-    quality_state_at_capture: a.quality_state_at_capture || 'Critical',
+    quality_state_at_capture: a.quality_state_at_capture || 'Active',
   };
 }
 
@@ -79,5 +79,10 @@ export const alertsApi = {
       notes: data.resolution_reason,
     });
     return normalizeAlert(res.data);
+  },
+
+  async purgeAlerts(): Promise<{ status: string; purged: number }> {
+    const res = await apiClient.delete('/alerts/purge');
+    return res.data;
   },
 };

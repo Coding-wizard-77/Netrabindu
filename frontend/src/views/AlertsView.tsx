@@ -3,7 +3,7 @@ import { Alert, AlertState, AlertSeverity } from '../types';
 import { alertsApi } from '../api/alerts';
 import { AlertTable } from '../components/alerts/AlertTable';
 import { AlertDetailDrawer } from '../components/alerts/AlertDetailDrawer';
-import { AlertTriangle, Filter, RefreshCw, Radio, ShieldAlert, CheckCircle2, Clock } from 'lucide-react';
+import { AlertTriangle, Filter, RefreshCw, Radio, ShieldAlert, CheckCircle2, Clock, Trash2 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 
 export const AlertsView: React.FC = () => {
@@ -48,6 +48,18 @@ export const AlertsView: React.FC = () => {
     setSelectedAlert(null);
   };
 
+  const handlePurgeAll = async () => {
+    if (window.confirm("Are you sure you want to purge all alerts from the queue?")) {
+      try {
+        setLoading(true);
+        await alertsApi.purgeAlerts();
+        setAlerts([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const criticalCount = alerts.filter((a) => a.severity === 'CRITICAL').length;
   const newCount = alerts.filter((a) => a.state === 'NEW').length;
 
@@ -81,6 +93,18 @@ export const AlertsView: React.FC = () => {
           <Button variant="secondary" size="sm" icon={<RefreshCw className="w-3.5 h-3.5" />} onClick={fetchAlerts} loading={loading}>
             Refresh Queue
           </Button>
+          {alerts.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<Trash2 className="w-3.5 h-3.5 text-rose-400" />}
+              onClick={handlePurgeAll}
+              loading={loading}
+              className="border border-rose-500/30 text-rose-400 hover:bg-rose-950/30"
+            >
+              Purge Queue
+            </Button>
+          )}
         </div>
       </div>
 

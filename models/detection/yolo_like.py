@@ -12,6 +12,45 @@ class YOLOLikeDetector(BaseDetector):
         self.model_name = model_name
 
     def predict(self, frame: Any) -> DetectionResult:
+        import time
+        start_t = time.perf_counter()
+
+        # Support real video frames (numpy ndarray or bytes)
+        if hasattr(frame, "shape") or isinstance(frame, (bytes, bytearray)):
+            try:
+                from ai_models.models.yolo_detector import yolo_detector
+                dets = yolo_detector.detect_objects(frame)
+                boxes: List[DetectionBox] = []
+                for d in dets:
+                    cid = 0 if d.get("class") == "person" else 1
+                    bbox = d.get("bbox", [0, 0, 100, 100])
+                    boxes.append(
+                        DetectionBox(
+                            class_id=cid,
+                            confidence=float(d.get("confidence", 0.9)),
+                            x1=float(bbox[0]),
+                            y1=float(bbox[1]),
+                            x2=float(bbox[2]),
+                            y2=float(bbox[3]),
+                        )
+                    )
+                    if d.get("plate_crop_coords"):
+                        pc = d["plate_crop_coords"]
+                        boxes.append(
+                            DetectionBox(
+                                class_id=2,  # Plate
+                                confidence=float(d.get("confidence", 0.9)),
+                                x1=float(pc[0]),
+                                y1=float(pc[1]),
+                                x2=float(pc[2]),
+                                y2=float(pc[3]),
+                            )
+                        )
+                latency = (time.perf_counter() - start_t) * 1000.0
+                return DetectionResult(boxes=boxes, latency_ms=latency)
+            except Exception:
+                pass
+
         objects: Iterable[str]
         if isinstance(frame, dict):
             objects = frame.get("objects", [])
@@ -38,4 +77,6 @@ class YOLOLikeDetector(BaseDetector):
                 )
             )
 
-        return DetectionResult(boxes=boxes, latency_ms=18.5)
+        latency = (time.perf_counter() - start_t) * 1000.0 or 18.5
+        return DetectionResult(boxes=boxes, latency_ms=latency)
+

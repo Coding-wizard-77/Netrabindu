@@ -6,7 +6,13 @@ Usage: python scripts/test_feed_detection.py [camera_code]
 If camera_code omitted, uses the first camera from /api/ingest catalog.
 """
 
+from pathlib import Path
 import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import time
 import json
 from urllib.parse import urljoin

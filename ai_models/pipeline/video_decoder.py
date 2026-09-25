@@ -63,9 +63,9 @@ class VideoDecoder:
             return False, None, 0.0
 
         if not HAS_OPENCV or self.cap is None or not self.cap.isOpened():
-            # Synthetic PTS progression for simulation
+            # Stream is connecting, loading, or uninitialized
             self.last_pts_ms += 40.0 # 25 FPS monotonic
-            return True, None, self.last_pts_ms
+            return False, None, self.last_pts_ms
 
         ok, frame = self.cap.read()
         if not ok:

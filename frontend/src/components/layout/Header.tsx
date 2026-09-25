@@ -86,59 +86,45 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur-md dark:border-navy-800 dark:bg-navy-950/95 transition-colors">
-      {/* Left: Branding & DEFCON Status */}
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-accent-blue/15 border border-accent-blue/30 text-accent-blue shadow-lg shadow-accent-blue/10">
-            <Shield className="h-6 w-6 text-accent-blue" />
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-            </span>
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="font-mono text-base font-black tracking-wider text-slate-900 dark:text-slate-100 uppercase">
-                NETRABINDU
-              </span>
-              <span className="rounded bg-slate-100 dark:bg-navy-800 px-1.5 py-0.5 text-[10px] font-bold font-mono text-cyan-600 dark:text-accent-cyan border border-slate-300 dark:border-navy-700">
-                v2.4 SEC-SECURED
-              </span>
-            </div>
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 tracking-tight">
-              GUJARAT POLICE STATE SURVEILLANCE GRID
-            </p>
-          </div>
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-4 backdrop-blur-md dark:border-navy-800 dark:bg-navy-950/95 transition-colors select-none">
+      {/* Left: Operational State & DEFCON Badge (No duplicate brand logo) */}
+      <div className="flex items-center space-x-3 shrink-0">
+        <div className="flex items-center space-x-2 rounded-xl border border-cyan-500/30 bg-cyan-950/30 px-3 py-1.5 text-xs shadow-inner">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="font-mono font-black text-cyan-400 tracking-wider text-[11px] uppercase">STATE GRID LIVE</span>
+          <span className="text-slate-600 dark:text-navy-700">•</span>
+          <span className="font-mono text-[10px] text-slate-400 font-bold hidden sm:inline">51 NODES</span>
         </div>
 
-        {/* Threat Level Badge */}
-        <div className="hidden lg:flex items-center space-x-2 rounded-lg border border-slate-200 bg-slate-100/80 dark:border-navy-700 dark:bg-navy-900/80 px-2.5 py-1 text-xs">
-          <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
-          <span className="font-mono font-bold text-slate-800 dark:text-slate-300">DEFCON 3</span>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400 border-l border-slate-300 dark:border-navy-700 pl-2">ACTIVE SENTINEL</span>
+        <div className="hidden lg:flex items-center space-x-2 rounded-xl border border-slate-200 bg-slate-100/80 dark:border-navy-800 dark:bg-navy-900/90 px-3 py-1.5 text-xs shadow-sm">
+          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span className="font-mono font-black text-slate-800 dark:text-amber-300 tracking-wider">DEFCON 3</span>
+          <span className="text-[10px] font-mono text-slate-400 border-l border-slate-300 dark:border-navy-700 pl-2 uppercase font-semibold">ACTIVE SENTINEL</span>
         </div>
       </div>
 
       {/* Center: Quick Plate Lookup Bar */}
-      <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center relative max-w-sm w-full mx-4">
+      <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center relative flex-1 max-w-md mx-4">
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-cyan-500" />
           <input
             type="text"
             value={quickPlate}
             onChange={(e) => setQuickPlate(e.target.value)}
-            placeholder="Quick Search Plate (e.g. GJ01AB1234)..."
-            className="w-full rounded-lg border border-slate-300 bg-slate-50 dark:border-navy-700 dark:bg-navy-900/90 py-1.5 pl-9 pr-14 text-xs font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-accent-blue focus:outline-none focus:ring-1 focus:ring-accent-blue transition-colors uppercase"
+            placeholder="QUICK SEARCH PLATE (E.G. GJ01AB1234)..."
+            className="w-full rounded-xl border border-slate-300 bg-slate-50 dark:border-navy-800 dark:bg-navy-900/90 py-1.5 pl-9 pr-14 text-xs font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-colors uppercase"
           />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-slate-300 bg-slate-200 dark:border-navy-700 dark:bg-navy-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-600 dark:text-slate-400">
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-slate-300 bg-slate-200 dark:border-navy-700 dark:bg-navy-800 px-1.5 py-0.5 text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400">
             ENTER
           </span>
         </div>
       </form>
 
       {/* Right: Actions, Clock & Tactical Toggles */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2 shrink-0">
         {/* Gujarat Sentinel Grid Live Validator Button */}
         <button
           onClick={() => {
@@ -146,11 +132,11 @@ export const Header: React.FC<HeaderProps> = ({
             setSentinelModalOpen(true);
           }}
           title="Open Gujarat Police Sentinel Grid Ingestion & Stream Diagnostics"
-          className="flex items-center space-x-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-2.5 py-1.5 text-xs font-bold text-cyan-300 hover:bg-cyan-900/60 hover:border-cyan-400 transition-colors shadow-glow-cyan"
+          className="flex items-center space-x-1.5 rounded-xl border border-cyan-500/40 bg-cyan-950/40 px-3 py-1.5 text-xs font-bold text-cyan-300 hover:bg-cyan-900/60 hover:border-cyan-400 transition-all shadow-glow-cyan"
         >
           <Radio className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
-          <span>SENTINEL GRID</span>
-          <span className="rounded bg-cyan-500/20 px-1 py-0.2 text-[9px] font-mono text-cyan-300 border border-cyan-500/40">50 CAMS</span>
+          <span className="font-mono tracking-wider">SENTINEL GRID</span>
+          <span className="rounded bg-cyan-500/20 px-1.5 py-0.2 text-[9px] font-mono text-cyan-300 border border-cyan-500/40">51</span>
         </button>
 
         {/* Quick Police Actions */}
@@ -161,11 +147,11 @@ export const Header: React.FC<HeaderProps> = ({
               onTriggerNakabandi();
             }}
             title="Trigger Nakabandi Lockdown (Hotkey: N)"
-            className="hidden sm:flex items-center space-x-1.5 rounded-lg border border-red-500/40 bg-red-950/40 px-2.5 py-1.5 text-xs font-bold text-red-300 hover:bg-red-900/60 hover:border-red-400 transition-colors shadow-sm"
+            className="hidden sm:flex items-center space-x-1.5 rounded-xl border border-rose-500/40 bg-rose-950/40 px-3 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-900/60 hover:border-rose-400 transition-all shadow-sm"
           >
-            <Lock className="h-3.5 w-3.5 text-red-400" />
-            <span>NAKABANDI</span>
-            <kbd className="hidden md:inline rounded bg-red-950 px-1 py-0.2 text-[9px] font-mono border border-red-800">N</kbd>
+            <Lock className="h-3.5 w-3.5 text-rose-400" />
+            <span className="font-mono tracking-wider">NAKABANDI</span>
+            <kbd className="hidden md:inline rounded bg-rose-950 px-1 py-0.2 text-[9px] font-mono border border-rose-800">N</kbd>
           </button>
         )}
 
@@ -176,43 +162,43 @@ export const Header: React.FC<HeaderProps> = ({
               onOpenSitRep();
             }}
             title="Generate Daily Police SitRep (Hotkey: S)"
-            className="hidden sm:flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-slate-100 dark:border-navy-700 dark:bg-navy-800/80 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700 hover:text-slate-900 dark:hover:text-slate-100 transition-colors shadow-sm"
+            className="hidden sm:flex items-center space-x-1.5 rounded-xl border border-slate-200 bg-slate-100 dark:border-navy-800 dark:bg-navy-900/90 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-800 hover:text-slate-900 dark:hover:text-slate-100 transition-all shadow-sm"
           >
-            <FileText className="h-3.5 w-3.5 text-accent-blue" />
-            <span>SITREP</span>
-            <kbd className="hidden md:inline rounded bg-slate-200 dark:bg-navy-900 px-1 py-0.2 text-[9px] font-mono border border-slate-300 dark:border-navy-700">S</kbd>
+            <FileText className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="font-mono tracking-wider">SITREP</span>
+            <kbd className="hidden md:inline rounded bg-slate-200 dark:bg-navy-800 px-1 py-0.2 text-[9px] font-mono border border-slate-300 dark:border-navy-700">S</kbd>
           </button>
         )}
 
         {/* Live IST Clock */}
-        <div className="hidden xl:flex items-center space-x-2 rounded-lg border border-slate-200 bg-slate-100 dark:border-navy-700 dark:bg-navy-900/90 px-3 py-1 text-right">
-          <Clock className="h-4 w-4 text-cyan-600 dark:text-accent-cyan animate-pulse" />
+        <div className="hidden xl:flex items-center space-x-2 rounded-xl border border-slate-200 bg-slate-100 dark:border-navy-800 dark:bg-navy-900/90 px-3 py-1 text-right">
+          <Clock className="h-3.5 w-3.5 text-cyan-400 animate-pulse" />
           <div className="leading-tight">
-            <div className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 tracking-wider">
+            <div className="font-mono text-xs font-black text-slate-900 dark:text-slate-100 tracking-wider">
               {timeStr || '12:00:00 IST'}
             </div>
-            <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{dateStr}</div>
+            <div className="text-[9px] text-slate-500 dark:text-slate-400 font-mono font-medium">{dateStr}</div>
           </div>
         </div>
 
         {/* Alert Counter Indicator */}
-        <div className="flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-slate-100 dark:border-navy-700 dark:bg-navy-900/80 px-2.5 py-1.5 text-xs">
-          <AlertTriangle className={`h-4 w-4 ${activeAlertCount > 0 ? 'text-red-500 animate-bounce' : 'text-slate-400'}`} />
-          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{activeAlertCount}</span>
-          <span className="hidden md:inline text-[10px] text-slate-500 dark:text-slate-400 uppercase">Alerts</span>
+        <div className="flex items-center space-x-1.5 rounded-xl border border-slate-200 bg-slate-100 dark:border-navy-800 dark:bg-navy-900/90 px-3 py-1.5 text-xs">
+          <AlertTriangle className={`h-3.5 w-3.5 ${activeAlertCount > 0 ? 'text-rose-500 animate-bounce' : 'text-slate-400'}`} />
+          <span className="font-mono font-black text-slate-800 dark:text-slate-200">{activeAlertCount}</span>
+          <span className="hidden md:inline text-[9px] font-mono font-bold text-slate-500 dark:text-slate-400 uppercase">Alerts</span>
         </div>
 
         {/* Audio Mute Toggle */}
         <button
           onClick={handleToggleMute}
           title={isMuted ? 'Unmute Tactical Siren & Chirps (Hotkey: M)' : 'Mute Tactical Siren & Chirps (Hotkey: M)'}
-          className={`rounded-lg border p-2 text-xs transition-colors ${
+          className={`rounded-xl border p-2 text-xs transition-colors ${
             isMuted
-              ? 'border-red-800/60 bg-red-950/40 text-red-400 hover:bg-red-900/50'
-              : 'border-slate-200 bg-slate-100 text-cyan-700 hover:bg-slate-200 dark:border-navy-700 dark:bg-navy-800 dark:text-accent-cyan dark:hover:bg-navy-700'
+              ? 'border-rose-800/60 bg-rose-950/40 text-rose-400 hover:bg-rose-900/50'
+              : 'border-slate-200 bg-slate-100 text-cyan-600 hover:bg-slate-200 dark:border-navy-800 dark:bg-navy-900 dark:text-cyan-400 dark:hover:bg-navy-800'
           }`}
         >
-          {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
         </button>
 
         {/* Keyboard Shortcuts Trigger */}
@@ -222,9 +208,9 @@ export const Header: React.FC<HeaderProps> = ({
             onOpenShortcuts();
           }}
           title="Tactical Keyboard Shortcuts HUD (Hotkey: ?)"
-          className="rounded-lg border border-slate-200 bg-slate-100 p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:border-navy-700 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700 dark:hover:text-slate-100 transition-colors"
+          className="rounded-xl border border-slate-200 bg-slate-100 p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:border-navy-800 dark:bg-navy-900 dark:text-slate-300 dark:hover:bg-navy-800 dark:hover:text-slate-100 transition-colors"
         >
-          <Keyboard className="h-4 w-4" />
+          <Keyboard className="h-3.5 w-3.5" />
         </button>
 
         {/* Light / Dark Mode Toggle */}
@@ -234,9 +220,9 @@ export const Header: React.FC<HeaderProps> = ({
             onToggleDarkMode();
           }}
           title="Toggle Dark/Light Tactical Mode (Hotkey: T)"
-          className="rounded-lg border border-slate-200 bg-slate-100 p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:border-navy-700 dark:bg-navy-800 dark:text-slate-300 dark:hover:bg-navy-700 dark:hover:text-slate-100 transition-colors shadow-sm"
+          className="rounded-xl border border-slate-200 bg-slate-100 p-2 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:border-navy-800 dark:bg-navy-900 dark:text-slate-300 dark:hover:bg-navy-800 dark:hover:text-slate-100 transition-colors shadow-sm"
         >
-          {darkMode ? <Sun className="h-4 w-4 text-amber-500 animate-spin-slow" /> : <Moon className="h-4 w-4 text-indigo-600" />}
+          {darkMode ? <Sun className="h-3.5 w-3.5 text-amber-400 animate-spin-slow" /> : <Moon className="h-3.5 w-3.5 text-indigo-500" />}
         </button>
       </div>
 

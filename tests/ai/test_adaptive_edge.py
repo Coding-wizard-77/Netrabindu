@@ -139,3 +139,89 @@ def test_adaptive_pipeline_emits_state_and_quality_plan():
     assert decision["sentinel"]["trigger"] is True
     assert "inference_tier" in decision
     assert decision["reasons"]
+
+
+def test_sentinel_real_frame_evaluation():
+    import numpy as np
+    import cv2
+
+    sentinel = ActivitySentinel()
+
+    # Empty frame -> quiet
+    f1 = np.zeros((360, 640, 3), dtype=np.uint8)
+    res1 = sentinel.evaluate_frame(f1)
+    assert res1.activity_score <= 0.35
+
+    # Moving target -> triggers motion
+    f2 = f1.copy()
+    cv2.rectangle(f2, (100, 100), (300, 250), (255, 255, 255), -1)
+    res2 = sentinel.evaluate_frame(f2, prev_frame=f1)
+    assert res2.trigger is True
+    assert res2.quality_hint in ("Normal", "Active", "Critical")
+
+
+def test_bytetrack_iou_tracking_and_redundancy_suppression():
+    tracker = ByteTrackTracker(iou_threshold=0.35)
+
+    # Frame 1: Detection at (100, 100, 200, 200)
+    t1 = tracker.update([(1, 0.95, 100, 100, 200, 200)])
+    assert len(t1) == 1
+    orig_id = t1[0].track_id
+
+    # Frame 2: Slight movement to (104, 104, 204, 204) - IoU > 0.85
+    t2 = tracker.update([(1, 0.94, 104, 104, 204, 204)])
+    assert len(t2) == 1
+    # Track ID must be preserved, not regenerated
+    assert t2[0].track_id == orig_id
+    assert t2[0].hits == 2
+
+    # Redundancy suppression check
+    skip = tracker.should_skip_detection((105, 105, 205, 205), min_hits=2)
+    assert skip is True
+
+
+def test_plate_detector_and_indian_plate_validation():
+    from models.plate.detector import PlateDetector
+    import numpy as np
+    import cv2
+
+    detector = PlateDetector()
+
+    # Synthetic plate on vehicle body
+    img = np.zeros((200, 400, 3), dtype=np.uint8)
+    cv2.rectangle(img, (50, 40), (350, 160), (80, 80, 80), -1)
+    cv2.rectangle(img, (120, 90), (280, 140), (240, 240, 240), -1)
+    cv2.putText(img, "GJ01AB1234", (130, 125), cv2.FONT_HERSHEY_PLAIN, 1.2, (0, 0, 0), 2)
+
+    res = detector.predict(img)
+    assert len(res.boxes) >= 1
+    assert res.boxes[0].class_id == 2
+    assert res.latency_ms > 0.0
+
+    ocr = PaddleOCRAdapter()
+    assert ocr.is_valid_indian_plate("GJ01AB1234") is True
+    assert ocr.is_valid_indian_plate("GJ 05 XY 9999") is True
+    assert ocr.is_valid_indian_plate("INVALID_TEXT") is False
+
+
+def test_telemetry_recorder_all_eight_metrics():
+    recorder = TelemetryRecorder()
+    cam = "cam-telemetry-full"
+
+    recorder.record_switch(cam, "Active", dwell_time_sec=12.5)
+    recorder.record_sentinel(cam, True)
+    recorder.record_sentinel(cam, False)
+    recorder.record_escalation(cam, latency_ms=18.4)
+    recorder.record_efficiency(cam, bandwidth_mbps=2.45, compute_hours=0.012)
+    recorder.record_quality(cam, "Active", 0.97)
+
+    snap = recorder.snapshot(cam)
+    assert snap["adaptive_quality_state"] == "Active"
+    assert snap["quality_switch_count"] >= 1
+    assert 0.0 <= snap["sentinel_trigger_rate"] <= 1.0
+    assert snap["inference_escalation_latency_ms"] == 18.4
+    assert snap["avg_bandwidth_per_camera"] == 2.45
+    assert snap["inference_compute_per_camera_hour"] == 0.012
+    assert snap["quality_state_dwell_time"] == 12.5
+    assert "Active" in snap["detection_quality_by_state"]
+

@@ -54,16 +54,27 @@ class RealtimeWebSocketManager {
           const raw = JSON.parse(event.data);
 
           if (raw.type === 'ALERT_NEW' && raw.data) {
+            const plateCandidate = 
+              raw.data.identifier?.normalized ||
+              raw.data.identifier?.raw ||
+              raw.data.detected_identifier ||
+              raw.data.entity_identifier ||
+              raw.data.target_identifier ||
+              '';
+
+            const cleanPlate = (typeof plateCandidate === 'string' ? plateCandidate.trim().toUpperCase() : '');
+            const isActualPlate = cleanPlate && cleanPlate !== 'UNKNOWN' && !cleanPlate.includes('ANOMALY') && cleanPlate.length >= 4;
+
             const normalizedAlert = {
               ...raw.data,
-              target_identifier: raw.data.entity_identifier || raw.data.target_identifier || 'UNKNOWN',
-              detected_identifier: raw.data.entity_identifier || raw.data.detected_identifier || 'UNKNOWN',
-              watchlist_category: raw.data.watchlist_category || 'SUSPECT_WATCHLIST',
+              target_identifier: raw.data.entity_identifier || raw.data.target_identifier || (isActualPlate ? cleanPlate : 'ACTIVE_ALERT'),
+              detected_identifier: isActualPlate ? cleanPlate : (raw.data.notes || 'ANOMALY_DETECTED'),
+              watchlist_category: raw.data.watchlist_category || (isActualPlate ? 'SUSPECT_WATCHLIST' : 'TRAFFIC_ANOMALY'),
               location: {
-                lat: raw.data.latitude || 23.0225,
-                lon: raw.data.longitude || 72.5714,
+                lat: raw.data.latitude || raw.data.location?.lat || 23.0225,
+                lon: raw.data.longitude || raw.data.location?.lon || 72.5714,
               },
-              occurred_at: raw.data.occurred_at || raw.data.created_at,
+              occurred_at: raw.data.occurred_at || raw.data.created_at || new Date().toISOString(),
               operator_notes: raw.data.notes,
               assigned_unit: raw.data.dispatch_unit,
             };
@@ -77,32 +88,42 @@ class RealtimeWebSocketManager {
 
             this.dispatch(wsMessage);
 
-            // Also dispatch as detection for live feed streams
-            this.dispatch({
-              topic: 'anpr.events',
-              type: 'DETECTION',
-              timestamp: new Date().toISOString(),
-              payload: {
-                event_id: normalizedAlert.event_id || normalizedAlert.id,
-                event_type: 'ANPR',
-                camera_id: normalizedAlert.camera_id || 'cam-01',
-                camera_name: normalizedAlert.camera_name,
-                occurred_at: normalizedAlert.occurred_at,
-                identifier: {
-                  type: 'vehicle_plate',
-                  raw: normalizedAlert.detected_identifier,
-                  normalized: normalizedAlert.detected_identifier,
-                  confidence: 0.98,
+            // Only dispatch to live ANPR event stream if it is a real, valid vehicle license plate (NEVER UNKNOWN)
+            if (isActualPlate) {
+              const eventId = raw.data.event_id || raw.data.id || `evt_${Date.now()}`;
+              this.dispatch({
+                topic: 'anpr.events',
+                type: 'DETECTION',
+                timestamp: new Date().toISOString(),
+                payload: {
+                  event_id: eventId,
+                  event_type: 'ANPR',
+                  camera_id: raw.data.camera_id || 'cam-01',
+                  camera_code: raw.data.camera_code || raw.data.camera_id || 'GJ-POL-CAM-01',
+                  camera_name: raw.data.camera_name || 'Gujarat Police Surveillance Node',
+                  department_name: raw.data.department_name || 'Home Department (Gujarat Police)',
+                  occurred_at: normalizedAlert.occurred_at,
+                  identifier: {
+                    type: 'vehicle_plate',
+                    raw: cleanPlate,
+                    normalized: cleanPlate,
+                    confidence: raw.data.confidence || raw.data.identifier?.confidence || 0.98,
+                  },
+                  location: normalizedAlert.location,
+                  evidence: {
+                    thumbnail_uri: raw.data.evidence?.thumbnail_uri || `/evidence/thumbnails/${eventId}.jpg`,
+                    plate_crop_uri: raw.data.evidence?.plate_crop_uri || `/evidence/crops/${eventId}_plate.jpg`,
+                    vehicle_crop_uri: raw.data.evidence?.vehicle_crop_uri || `/evidence/crops/${eventId}_vehicle.jpg`,
+                    clip_uri: raw.data.evidence?.clip_uri || `/evidence/clips/${eventId}.mp4`,
+                  },
+                  pipeline: raw.data.pipeline || {
+                    node_id: 'node-sg-01',
+                    model_version: 'yolo-v11-anpr-v2',
+                    quality_state: 'Critical',
+                  },
                 },
-                location: normalizedAlert.location,
-                evidence: normalizedAlert.evidence || {},
-                pipeline: {
-                  node_id: 'node-sg-01',
-                  model_version: 'yolo-v11-anpr-v2',
-                  quality_state: 'Critical',
-                },
-              },
-            });
+              });
+            }
           } else if (raw.type === 'ALERT_UPDATE' && raw.data) {
             this.dispatch({
               topic: 'alerts',

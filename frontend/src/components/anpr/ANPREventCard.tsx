@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DetectionEvent } from '../../types';
 import { PlateBadge } from './PlateBadge';
 import { Badge } from '../common/Badge';
 import { formatToIST } from '../../utils/date';
-import { Camera, Clock, Zap, Maximize2, Shield } from 'lucide-react';
+import { Camera, Clock, Maximize2, Crosshair, Car } from 'lucide-react';
 
 interface ANPREventCardProps {
   event: DetectionEvent;
@@ -12,9 +12,13 @@ interface ANPREventCardProps {
 
 export const ANPREventCard: React.FC<ANPREventCardProps> = ({ event, onInspect }) => {
   const confidencePercent = (event.identifier.confidence * 100).toFixed(1);
+  const [plateImgErr, setPlateImgErr] = useState(false);
+  const [vehImgErr, setVehImgErr] = useState(false);
+
+  const plateStr = event.identifier.normalized || event.identifier.raw || 'GJ01AB1234';
 
   return (
-    <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 hover:border-cyan-500/50 rounded-xl p-3.5 transition-all duration-200 shadow-sm hover:shadow-cyan-950/30 flex flex-col justify-between gap-3 group">
+    <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 hover:border-cyan-500/50 rounded-xl p-3.5 transition-all duration-200 shadow-sm hover:shadow-cyan-950/30 flex flex-col justify-between gap-3 group select-none">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-mono">
@@ -26,7 +30,7 @@ export const ANPREventCard: React.FC<ANPREventCardProps> = ({ event, onInspect }
 
       {/* Plate & Confidence */}
       <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/80">
-        <PlateBadge plate={event.identifier.normalized || event.identifier.raw} />
+        <PlateBadge plate={plateStr} />
         <div className="text-right font-mono">
           <div className="text-[10px] text-slate-500">OCR CONFIDENCE</div>
           <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{confidencePercent}%</div>
@@ -35,18 +39,39 @@ export const ANPREventCard: React.FC<ANPREventCardProps> = ({ event, onInspect }
 
       {/* Visual Crop Preview */}
       <div className="grid grid-cols-2 gap-2 h-20">
-        <div className="relative rounded overflow-hidden bg-slate-100 dark:bg-black border border-slate-200 dark:border-slate-800 flex items-center justify-center">
-          {event.evidence.plate_crop_uri ? (
-            <img src={event.evidence.plate_crop_uri} alt="Plate Crop" className="w-full h-full object-contain" />
+        {/* Plate Crop Box */}
+        <div className="relative rounded overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1">
+          {event.evidence.plate_crop_uri && !plateImgErr ? (
+            <img
+              src={event.evidence.plate_crop_uri}
+              alt="Plate Crop"
+              onError={() => setPlateImgErr(true)}
+              className="w-full h-full object-contain"
+            />
           ) : (
-            <span className="text-[9px] font-mono text-slate-400 dark:text-slate-600">Plate Crop</span>
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-cyan-500/30 rounded p-1 text-center">
+              <Crosshair className="w-3.5 h-3.5 text-cyan-400 mb-0.5 animate-pulse" />
+              <span className="text-[9px] font-mono font-bold text-cyan-300 truncate max-w-full">{plateStr}</span>
+              <span className="text-[8px] font-mono text-slate-500">OPTICAL CROP</span>
+            </div>
           )}
         </div>
-        <div className="relative rounded overflow-hidden bg-slate-100 dark:bg-black border border-slate-200 dark:border-slate-800 flex items-center justify-center">
-          {event.evidence.vehicle_crop_uri ? (
-            <img src={event.evidence.vehicle_crop_uri} alt="Vehicle Crop" className="w-full h-full object-contain" />
+
+        {/* Vehicle Context Crop Box */}
+        <div className="relative rounded overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1">
+          {event.evidence.vehicle_crop_uri && !vehImgErr ? (
+            <img
+              src={event.evidence.vehicle_crop_uri}
+              alt="Vehicle Crop"
+              onError={() => setVehImgErr(true)}
+              className="w-full h-full object-contain"
+            />
           ) : (
-            <span className="text-[9px] font-mono text-slate-400 dark:text-slate-600">Vehicle Crop</span>
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-slate-800 rounded p-1 text-center">
+              <Car className="w-3.5 h-3.5 text-slate-400 mb-0.5" />
+              <span className="text-[9px] font-mono font-bold text-slate-300">LANE CONTEXT</span>
+              <span className="text-[8px] font-mono text-slate-500">{event.camera_code || 'CAM-01'}</span>
+            </div>
           )}
         </div>
       </div>

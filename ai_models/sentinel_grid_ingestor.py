@@ -100,6 +100,10 @@ class SentinelGridIngestor:
                 self.decoders[cam.get("camera_code", "CAM-01")] = decoder
 
             ok, frame, pts_ms = decoder.read_frame()
+            if not ok or frame is None:
+                logger.debug(f"[Sentinel Ingest] Stream for {cam.get('camera_code')} is loading. Detection skipped.")
+                await asyncio.sleep(1.5)
+                continue
 
             quality_state = "Critical" if severity == "CRITICAL" else ("Active" if severity == "HIGH" else "Normal")
 

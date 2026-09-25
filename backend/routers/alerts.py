@@ -193,3 +193,21 @@ async def resolve_alert(
         return AlertOut.model_validate(updated)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+@router.delete("/purge")
+def purge_all_alerts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(["SUPER_ADMIN", "DEPT_ADMIN"]))
+):
+    """Purge all alerts from the system."""
+    deleted = db.query(Alert).delete()
+    db.commit()
+    audit_service.log(
+        actor=current_user.username,
+        action="ALERT_QUEUE_PURGED",
+        target="ALL_ALERTS",
+        db=db,
+        result="SUCCESS",
+        reason=f"Purged {deleted} alerts"
+    )
+    return {"status": "SUCCESS", "purged": deleted}

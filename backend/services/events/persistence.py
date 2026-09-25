@@ -7,6 +7,7 @@ from backend.services.watchlist.normalizer import normalize_plate
 from backend.services.correlation.engine import correlation_engine
 from backend.services.alerts.service import alert_service
 from backend.services.events.bus import event_bus
+from backend.services.events.evidence_generator import generate_all_for_event
 
 logger = logging.getLogger(__name__)
 
@@ -88,6 +89,11 @@ class EventPersistenceService:
 
         db.commit()
         db.refresh(detection)
+
+        # Pre-generate real evidence assets (crops, thumbnail, MP4 clip)
+        if event_type == "ANPR" and norm_plate:
+            cam_code = camera.camera_code if camera else "CAM-01"
+            generate_all_for_event(event_id, norm_plate, cam_code)
 
         # Route through correlation and watchlist matching for ANPR
         correlation_result = await correlation_engine.process_detection_event(detection, db)

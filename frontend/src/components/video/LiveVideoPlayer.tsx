@@ -219,7 +219,7 @@ export const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
         ref={containerRef}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`relative w-full h-full min-h-[140px] flex flex-col bg-slate-950 overflow-hidden group select-none transition-all duration-300 ${
+        className={`relative w-full h-full min-h-[90px] flex flex-col bg-slate-950 overflow-hidden group select-none transition-all duration-300 ${
           activeAnomaly
             ? 'ring-2 ring-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.6)] animate-pulse'
             : isSelected
@@ -372,7 +372,7 @@ export const LiveVideoPlayer: React.FC<LiveVideoPlayerProps> = ({
       className={`relative flex flex-col overflow-hidden rounded-xl border bg-black shadow-2xl transition-all duration-300 ${
         activeAnomaly ? 'border-rose-500 ring-2 ring-rose-500 shadow-[0_0_30px_rgba(244,63,94,0.4)]' : 'border-navy-700'
       } ${
-        isFullscreen ? 'h-screen w-screen rounded-none z-50' : 'h-full min-h-[380px]'
+        isFullscreen ? 'h-screen w-screen rounded-none z-50' : 'h-full min-h-[260px]'
       }`}
     >
       {/* Video Viewport */}

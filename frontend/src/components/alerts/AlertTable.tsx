@@ -67,6 +67,7 @@ export const AlertTable: React.FC<AlertTableProps> = ({ alerts, onSelectAlert, i
       onRowClick={onSelectAlert}
       isLoading={isLoading}
       searchPlaceholder="Filter alerts by plate, category, or camera..."
+      emptyMessage="No active watchlist alerts. Monitoring 51 Gujarat Police nodes for hotlist entity intercepts."
     />
   );
 };

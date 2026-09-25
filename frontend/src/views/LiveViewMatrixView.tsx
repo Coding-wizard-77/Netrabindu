@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera } from '../types';
 import { camerasApi } from '../api/cameras';
 import { sentinelApi, IngestCameraItem } from '../api/sentinel';
@@ -13,20 +13,12 @@ import {
   Trash2, 
   Camera as CameraIcon, 
   Search, 
-  Shield, 
   Sparkles, 
-  Maximize, 
   X, 
   Activity, 
-  Layers, 
   MapPin, 
   GripVertical,
-  Move,
-  Minimize2,
-  Maximize2,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp
+  Move
 } from 'lucide-react';
 import { Drawer } from '../components/common/Drawer';
 
@@ -59,13 +51,6 @@ export const LiveViewMatrixView: React.FC = () => {
   const [activeAnomalies, setActiveAnomalies] = useState<Record<string, { type: string; severity: string; description?: string }>>({});
   const { addLiveAlert } = useAlertStore();
 
-  // Draggable Floating Inspection Deck state
-  const [deckPos, setDeckPos] = useState<{ x: number; y: number }>({ x: 80, y: 70 });
-  const [isDraggingDeck, setIsDraggingDeck] = useState<boolean>(false);
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [deckMinimized, setDeckMinimized] = useState<boolean>(false);
-  const deckRef = useRef<HTMLDivElement>(null);
-
   const layouts: GridLayout[] = ['1x1', '2x2', '3x3', '1+5', '4x4', '5x5', '6x6', '50-GRID'];
 
   const { 
@@ -85,7 +70,6 @@ export const LiveViewMatrixView: React.FC = () => {
       const payload = msg.payload;
       if (!payload) return;
       
-      // If it's an anomaly alert, update activeAnomalies map
       if (payload.watchlist_category === 'TRAFFIC_ANOMALY' || payload.entity_identifier?.includes('ANOMALY') || payload.notes?.includes('Anomaly')) {
         const camKey = payload.camera_id || payload.camera_code;
         if (camKey) {
@@ -98,7 +82,6 @@ export const LiveViewMatrixView: React.FC = () => {
             }
           }));
 
-          // Clear anomaly after 30 seconds
           setTimeout(() => {
             setActiveAnomalies((prev) => {
               const updated = { ...prev };
@@ -109,7 +92,6 @@ export const LiveViewMatrixView: React.FC = () => {
         }
       }
       
-      // Also register into alert store
       if (payload.id) {
         addLiveAlert(payload);
       }
@@ -145,6 +127,7 @@ export const LiveViewMatrixView: React.FC = () => {
     };
   }, [addLiveAlert]);
 
+  // Load surveillance camera catalog
   useEffect(() => {
     async function loadCameras() {
       setLoading(true);
@@ -200,30 +183,16 @@ export const LiveViewMatrixView: React.FC = () => {
     loadCameras();
   }, [layout]);
 
-  // Draggable floating window mouse listeners
+  // Escape key listener to close inspect modal
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDraggingDeck) return;
-      const newX = Math.max(10, Math.min(window.innerWidth - 380, e.clientX - dragOffset.x));
-      const newY = Math.max(10, Math.min(window.innerHeight - 150, e.clientY - dragOffset.y));
-      setDeckPos({ x: newX, y: newY });
-    };
-
-    const handleMouseUp = () => {
-      if (isDraggingDeck) {
-        setIsDraggingDeck(false);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && inspectCamera) {
+        setInspectCamera(null);
       }
     };
-
-    if (isDraggingDeck) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isDraggingDeck, dragOffset]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [inspectCamera]);
 
   const handleAutoFill = () => {
     if (cameras.length === 0) return;
@@ -254,97 +223,104 @@ export const LiveViewMatrixView: React.FC = () => {
 
   return (
     <div className="space-y-3 h-[calc(100vh-8.5rem)] flex flex-col select-none relative">
-      {/* Top Controls Glass Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-[#0a0f1d]/90 backdrop-blur-md rounded-2xl border border-slate-800/90 shadow-2xl">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-inner">
-            <Radio className="w-5 h-5 text-cyan-400 animate-pulse" />
-          </div>
-          <div>
-            <div className="text-sm font-black font-mono text-white tracking-wider uppercase flex items-center gap-2">
-              Tactical Video Wall Matrix
-              <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40">
+      {/* Tactical Video Wall Control Deck (Rock-solid, Non-wrapping 2-Tier Architecture) */}
+      <div className="bg-[#0a0f1d]/95 backdrop-blur-md rounded-2xl border border-slate-800/90 shadow-2xl p-3 space-y-2.5 select-none shrink-0">
+        {/* Tier 1: Title + Layout Switcher Pills */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-inner shrink-0">
+              <Radio className="w-4 h-4 text-cyan-400 animate-pulse" />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-sm font-black font-mono text-white tracking-wider uppercase">
+                Tactical Video Wall Matrix
+              </h1>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono border border-cyan-500/40 font-bold uppercase">
                 {layout === '50-GRID' ? '50 CHANNELS SIMULTANEOUS' : `${layout} MATRIX`}
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-0.5 text-[11px] font-mono text-slate-400">
-              <span className="flex items-center gap-1 text-emerald-400 font-bold">
-                <Activity className="w-3.5 h-3.5 animate-pulse" />
-                {activeSlotCount}/{totalSlots} Active Feeds
-              </span>
-              <span className="text-slate-600">•</span>
-              <span>{cameras.length} Government Nodes Available</span>
-              <span className="text-slate-600">•</span>
-              <span className="text-cyan-400 font-medium">H.264/H.265 Direct Relay</span>
-              <span className="text-slate-600">•</span>
-              <span className="text-amber-400/90 font-medium flex items-center gap-1">
-                <Move className="w-3 h-3" /> Draggable Grid
-              </span>
-            </div>
+          </div>
+
+          {/* Matrix Switcher Pills */}
+          <div className="flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800 shrink-0 shadow-inner overflow-x-auto custom-scrollbar">
+            {layouts.map((l) => (
+              <button
+                key={l}
+                onClick={() => {
+                  setLayout(l);
+                  if (l === '50-GRID') {
+                    handlePopulateAll50();
+                  }
+                }}
+                className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all shrink-0 ${
+                  layout === l
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-glow-cyan'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                {l === '50-GRID' ? '50 ALL' : l}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Layout Switcher Pills */}
-        <div className="flex items-center gap-1 bg-slate-900/90 p-1.5 rounded-xl border border-slate-800 overflow-x-auto shadow-inner">
-          {layouts.map((l) => (
-            <button
-              key={l}
-              onClick={() => {
-                setLayout(l);
-                if (l === '50-GRID') {
-                  handlePopulateAll50();
-                }
-              }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all shrink-0 ${
-                layout === l
-                  ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-glow-cyan'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+        {/* Tier 2: Live Telemetry Metadata (Left) + Action Buttons (Right) */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5 pt-2 border-t border-slate-800/60 text-[11px] font-mono">
+          <div className="flex items-center gap-2 flex-wrap text-slate-400">
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-bold">
+              <Activity className="w-3 h-3 animate-pulse" />
+              {activeSlotCount}/{totalSlots} Active Feeds
+            </span>
+            <span className="text-slate-700">•</span>
+            <span>{cameras.length} Government Nodes Available</span>
+            <span className="text-slate-700 hidden sm:inline">•</span>
+            <span className="text-cyan-400 font-medium hidden sm:inline">H.264/H.265 Direct Relay</span>
+            <span className="text-slate-700 hidden lg:inline">•</span>
+            <span className="text-amber-400/90 font-medium hidden lg:inline flex items-center gap-1">
+              <Move className="w-3 h-3" /> Draggable Grid
+            </span>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              icon={<Sparkles className="w-3.5 h-3.5 text-cyan-400" />}
+              onClick={handleAutoFill}
+              title="Auto-fill all empty slots with active surveillance cameras"
             >
-              {l === '50-GRID' ? '50 ALL' : l}
-            </button>
-          ))}
-        </div>
+              Auto-Fill Grid
+            </Button>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            icon={<Sparkles className="w-3.5 h-3.5 text-cyan-400" />}
-            onClick={handleAutoFill}
-            title="Auto-fill all empty slots with active surveillance cameras"
-          >
-            Auto-Fill Grid
-          </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              icon={<Radio className="w-3.5 h-3.5" />}
+              onClick={handlePopulateAll50}
+            >
+              Show All 50
+            </Button>
 
-          <Button
-            size="sm"
-            variant="primary"
-            icon={<Radio className="w-3.5 h-3.5" />}
-            onClick={handlePopulateAll50}
-          >
-            Show All 50
-          </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              icon={<CameraIcon className="w-3.5 h-3.5 text-cyan-400" />}
+              onClick={() => setPickerOpen(true)}
+            >
+              Assign Feed
+            </Button>
 
-          <Button
-            size="sm"
-            variant="secondary"
-            icon={<CameraIcon className="w-3.5 h-3.5 text-cyan-400" />}
-            onClick={() => setPickerOpen(true)}
-          >
-            Assign Feed
-          </Button>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            icon={<Trash2 className="w-3.5 h-3.5 text-slate-400 hover:text-rose-400" />}
-            onClick={clearWall}
-            title="Clear all cameras from video wall"
-          >
-            Clear Wall
-          </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              icon={<Trash2 className="w-3.5 h-3.5 text-slate-400 hover:text-rose-400" />}
+              onClick={clearWall}
+              title="Clear all cameras from video wall"
+            >
+              Clear Wall
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -356,14 +332,10 @@ export const LiveViewMatrixView: React.FC = () => {
             setSelectedSlotIndex(index);
             if (!slots[index]) {
               setPickerOpen(true);
-            } else {
-              setInspectCamera(slots[index]);
-              setDeckMinimized(false);
             }
           }}
           onInspectCamera={(camera) => {
             setInspectCamera(camera);
-            setDeckMinimized(false);
           }}
         />
       </div>
@@ -465,108 +437,80 @@ export const LiveViewMatrixView: React.FC = () => {
         </div>
       </Drawer>
 
-      {/* DRAGGABLE FLOATING TACTICAL INSPECTION DECK */}
+      {/* CENTERED TACTICAL MODAL INSPECTION DIALOG (No Overlapping Background Cards) */}
       {inspectCamera && (
         <div
-          ref={deckRef}
-          style={{
-            position: 'fixed',
-            left: `${deckPos.x}px`,
-            top: `${deckPos.y}px`,
-            zIndex: 60,
-          }}
-          className={`bg-navy-950 border border-cyan-500/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-shadow duration-150 animate-in fade-in zoom-in-95 ${
-            deckMinimized ? 'w-80 h-auto' : 'w-[90vw] max-w-4xl max-h-[85vh]'
-          } ${isDraggingDeck ? 'shadow-glow-cyan ring-2 ring-cyan-400/60' : 'shadow-2xl'}`}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+          onClick={() => setInspectCamera(null)}
         >
-          {/* Draggable Header Bar */}
           <div
-            onMouseDown={(e) => {
-              if ((e.target as HTMLElement).closest('button')) return;
-              e.preventDefault();
-              setIsDraggingDeck(true);
-              setDragOffset({
-                x: e.clientX - deckPos.x,
-                y: e.clientY - deckPos.y,
-              });
-            }}
-            className="flex items-center justify-between px-3.5 py-2.5 bg-navy-900 border-b border-navy-800 cursor-move select-none group"
-            title="Drag to reposition window anywhere on the screen"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-5xl max-h-[90vh] bg-navy-950 border border-cyan-500/60 rounded-2xl shadow-[0_0_50px_rgba(6,182,212,0.25)] ring-1 ring-cyan-500/30 overflow-hidden flex flex-col animate-in zoom-in-95 duration-150"
           >
-            <div className="flex items-center gap-2 min-w-0 pr-2">
-              <div className="p-1 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shrink-0">
-                <Move className="w-3.5 h-3.5 animate-pulse" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs font-black font-mono text-white tracking-wider uppercase truncate flex items-center gap-1.5">
-                  <span className="text-cyan-400">{inspectCamera.camera_code}</span>
-                  <span className="text-slate-500">•</span>
-                  <span className="truncate">{inspectCamera.name}</span>
+            {/* Modal Header Bar */}
+            <div className="flex items-center justify-between px-4 py-3 bg-navy-900/95 border-b border-navy-800 select-none">
+              <div className="flex items-center gap-2.5 min-w-0 pr-3">
+                <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 shrink-0">
+                  <CameraIcon className="w-4 h-4 animate-pulse" />
                 </div>
-                {!deckMinimized && (
-                  <div className="text-[9px] font-mono text-slate-400 truncate">
-                    <span>{inspectCamera.department_name || 'Home Department (Gujarat Police)'}</span>
-                    <span> &bull; </span>
-                    <span className="text-slate-500">HOLD & DRAG TITLEBAR TO REPOSITION</span>
+                <div className="min-w-0">
+                  <div className="text-xs font-black font-mono text-white tracking-wider uppercase truncate flex items-center gap-2">
+                    <span className="text-cyan-400 font-bold">{inspectCamera.camera_code}</span>
+                    <span className="text-slate-600">•</span>
+                    <span className="truncate">{inspectCamera.name}</span>
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono border border-emerald-500/30 font-bold shrink-0">
+                      LIVE INSPECTION
+                    </span>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Window Controls: Minimize, Maximize/Restore, Close */}
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                onClick={() => setDeckMinimized(!deckMinimized)}
-                className="p-1.5 rounded-lg bg-navy-800 hover:bg-cyan-600 text-slate-300 hover:text-white transition-colors"
-                title={deckMinimized ? 'Expand Deck' : 'Minimize to Mini-Player'}
-              >
-                {deckMinimized ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
-              </button>
-
-              <button
-                onClick={() => setInspectCamera(null)}
-                className="p-1.5 rounded-lg bg-navy-800 hover:bg-rose-600 text-slate-300 hover:text-white transition-colors"
-                title="Close Inspection Deck"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Body Video Player */}
-          <div className={`bg-black ${deckMinimized ? 'h-44' : 'flex-1 min-h-[360px] max-h-[520px]'}`}>
-            <LiveVideoPlayer
-              camera={inspectCamera}
-              compact={deckMinimized}
-              detectedPlate="GJ01AB1234"
-              confidence={98.2}
-              adaptiveMode="critical"
-              activeAnomaly={inspectCamera ? (activeAnomalies[inspectCamera.id] || activeAnomalies[inspectCamera.camera_code]) : undefined}
-            />
-          </div>
-
-          {/* Footer Telemetry Details (hidden when minimized) */}
-          {!deckMinimized && (
-            <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 bg-navy-900/95 border-t border-navy-800 text-[11px] font-mono">
-              <div className="flex items-center gap-3 text-slate-400 truncate">
-                <div><span className="text-slate-500">RELAY:</span> <span className="text-emerald-400 font-bold">WHEP / MJPEG 25 FPS</span></div>
-                <div><span className="text-slate-500">ANPR:</span> <span className="text-yellow-400 font-bold">HOTLIST SCAN ACTIVE</span></div>
+                  <div className="text-[10px] font-mono text-slate-400 flex items-center gap-2 mt-0.5 truncate">
+                    <span>{inspectCamera.department_name || 'Gujarat Police State Grid'}</span>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-500 truncate">{inspectCamera.address || 'Ahmedabad, Gujarat'}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="primary"
+              {/* Close Button */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
                   onClick={() => setInspectCamera(null)}
+                  className="p-1.5 rounded-lg bg-navy-800 hover:bg-rose-600 text-slate-300 hover:text-white transition-colors"
+                  title="Close Inspection (Esc)"
                 >
-                  Close Inspection
-                </Button>
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
-          )}
+
+            {/* High-Fidelity Video Feed Viewport */}
+            <div className="relative flex-1 min-h-[380px] max-h-[580px] bg-black overflow-hidden">
+              <LiveVideoPlayer
+                camera={inspectCamera}
+                compact={false}
+                detectedPlate="GJ01AB1234"
+                confidence={98.2}
+                adaptiveMode="critical"
+                activeAnomaly={inspectCamera ? (activeAnomalies[inspectCamera.id] || activeAnomalies[inspectCamera.camera_code]) : undefined}
+              />
+            </div>
+
+            {/* Modal Footer with Telemetry Details */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 bg-navy-900/95 border-t border-navy-800 text-[11px] font-mono">
+              <div className="flex items-center gap-3 text-slate-400 flex-wrap">
+                <div><span className="text-slate-500">PROTOCOL:</span> <span className="text-emerald-400 font-bold">WHEP / WebRTC 25 FPS</span></div>
+                <span className="text-slate-700 hidden sm:inline">•</span>
+                <div><span className="text-slate-500">ANPR:</span> <span className="text-amber-400 font-bold">SENTINEL EDGE SCAN ACTIVE</span></div>
+                <span className="text-slate-700 hidden sm:inline">•</span>
+                <div><span className="text-slate-500">STATUS:</span> <span className="text-emerald-400 font-bold">{inspectCamera.status}</span></div>
+              </div>
+
+              <Button size="sm" variant="secondary" onClick={() => setInspectCamera(null)}>
+                Close Viewer
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 };
-

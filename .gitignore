@@ -36,6 +36,9 @@ storage/
 # Generated evidence
 evidence/demo-videos/
 evidence/screenshots/
+backend/evidence/clips/
+backend/evidence/crops/
+backend/evidence/thumbnails/
 
 # Model weights
 models/**/*.pt
@@ -45,3 +48,4 @@ models/**/*.engine
 # Temporary files
 tmp/
 temp/
+~$*

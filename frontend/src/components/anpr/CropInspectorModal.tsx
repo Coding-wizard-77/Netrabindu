@@ -63,7 +63,12 @@ export const CropInspectorModal: React.FC<CropInspectorModalProps> = ({
         </div>
 
         {/* Evidence Video Player & Crops */}
-        <EvidencePlayer evidence={event.evidence} title="Rolling Buffer Evidence Clip" />
+        <EvidencePlayer
+          evidence={event.evidence}
+          cameraId={event.camera_id}
+          cameraCode={event.camera_code}
+          title="Rolling Buffer Evidence Clip"
+        />
 
         {/* Timestamp & Integrity Info */}
         <div className="p-3 bg-slate-950 rounded-lg border border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
