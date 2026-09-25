@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NetraBindu SSE Demo</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #events { max-width: 900px; margin-top: 12px; }
+    .evt { padding: 8px; border-bottom: 1px solid #eee; }
+    .ts { color: #666; font-size: 0.9em; }
+    .payload { white-space: pre-wrap; font-family: monospace; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h2>NetraBindu — Live Events (SSE)</h2>
+  <p>Connecting to <strong>/sse/events</strong> on the backend. Open this page and run the live detector to see events.</p>
+  <div id="status">Connecting…</div>
+  <div id="events"></div>
+
+  <script>
+    const status = document.getElementById('status');
+    const events = document.getElementById('events');
+    const BACKEND = 'http://127.0.0.1:8000';
+    const s = new EventSource(BACKEND + '/sse/events');
+    s.onopen = () => { status.textContent = 'Connected (SSE)'; };
+    s.onerror = (e) => { status.textContent = 'Connection error'; };
+    s.onmessage = (m) => {
+      const container = document.createElement('div');
+      container.className = 'evt';
+      try {
+        const data = JSON.parse(m.data);
+        const ts = data.ts || Date.now();
+        const h = document.createElement('div');
+        h.className = 'ts';
+        h.textContent = new Date(ts).toLocaleString();
+        const p = document.createElement('div');
+        p.className = 'payload';
+        p.textContent = JSON.stringify(data, null, 2);
+        container.appendChild(h);
+        container.appendChild(p);
+      } catch (err) {
+        container.textContent = m.data;
+      }
+      events.insertBefore(container, events.firstChild);
+      // flash title
+      document.title = '⚠️ New Event — NetraBindu';
+      setTimeout(() => document.title = 'NetraBindu SSE Demo', 2000);
+    };
+  </script>
+</body>
+</html>

@@ -12,6 +12,9 @@ if str(backend_dir.parent) not in sys.path:
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Query, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+import asyncio
+import json
 
 try:
     from backend.config import settings
@@ -49,6 +52,24 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Seeding completed or encountered non-fatal note: {e}")
     await event_bus.start()
+    async def _handle_anpr(topic, value):
+        try:
+            await alert_ws_manager.broadcast_alert(value)
+        except Exception:
+            pass
+
+        dead = []
+        for q in list(sse_clients):
+            try:
+                await q.put(json.dumps(value))
+            except Exception:
+                dead.append(q)
+
+        for d in dead:
+            if d in sse_clients:
+                sse_clients.remove(d)
+
+    event_bus.subscribe("anpr.events", _handle_anpr)
     logger.info("Netrabindu Backend Control Plane initialized successfully.")
     yield
     logger.info("Shutting down Netrabindu Backend Control Plane...")
@@ -60,6 +81,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# SSE client registries (per-process)
+sse_clients: set = set()
+
 
 # CORS Configuration
 app.add_middleware(
@@ -122,6 +147,24 @@ async def websocket_alerts(websocket: WebSocket):
         alert_ws_manager.disconnect(websocket)
     except Exception:
         alert_ws_manager.disconnect(websocket)
+
+
+@app.get("/sse/events")
+async def sse_events():
+    """Server-Sent Events stream for detection events."""
+    q: asyncio.Queue = asyncio.Queue()
+    sse_clients.add(q)
+
+    async def event_generator():
+        try:
+            while True:
+                data = await q.get()
+                yield f"data: {data}\n\n"
+        finally:
+            if q in sse_clients:
+                sse_clients.remove(q)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.get("/")
 async def root():
